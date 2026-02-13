@@ -1,0 +1,38 @@
+import { Request, Response, NextFunction } from 'express';
+import { query } from '../config/database';
+
+/**
+ * Middleware to validate API key
+ */
+export const validateApiKey = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const apiKey = req.headers['x-api-key'] as string;
+
+        if (!apiKey) {
+            res.status(401).json({ error: 'API key required' });
+            return;
+        }
+
+        // Check if API key exists and is active
+        const result = await query(
+            'SELECT * FROM api_keys WHERE api_key = $1 AND active = true',
+            [apiKey]
+        );
+
+        if (result.rows.length === 0) {
+            res.status(403).json({ error: 'Invalid API key' });
+            return;
+        }
+
+        // Attach API key info to request
+        (req as any).apiKey = result.rows[0];
+        next();
+    } catch (error) {
+        console.error('API key validation error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};

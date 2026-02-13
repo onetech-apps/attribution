@@ -1,0 +1,18 @@
+# Attribution SDK iOS
+
+Swift Package для системи атрибуції
+
+## Файли
+
+- `Package.swift` - Swift Package manifest
+- `Sources/AttributionSDK/` - Вихідний код SDK
+  - `AttributionSDK.swift` - Головний клас SDK
+  - `Models.swift` - Моделі даних
+  - `DeviceInfoCollector.swift` - Збір інформації про пристрій
+  - `AttributionError.swift` - Типи помилок
+- `Tests/AttributionSDKTests/` - Unit тести
+- `README.md` - Документація
+
+## Використання
+
+Дивіться README.md для детальних інструкцій.
