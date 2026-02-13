@@ -19,19 +19,19 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files (dashboard)
+// Serve static files (dashboard) - before tenant middleware
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Trust proxy for correct IP detection
 app.set('trust proxy', true);
 
-// Multi-tenant middleware (detect app by domain)
-app.use(tenantMiddleware);
-
-// Health check endpoint
+// Health check endpoint (before tenant middleware)
 app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Multi-tenant middleware (detect app by domain)
+app.use(tenantMiddleware);
 
 // Apple App Site Association (must be before other routes)
 app.use(appleRoutes);
