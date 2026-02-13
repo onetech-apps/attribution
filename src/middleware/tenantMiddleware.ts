@@ -31,6 +31,13 @@ export async function tenantMiddleware(
     try {
         const hostname = req.hostname;
 
+        // Admin routes, postbacks don't need a specific tenant
+        const skipPaths = ['/api/v1/admin', '/api/v1/postback', '/health'];
+        if (skipPaths.some(p => req.path.startsWith(p))) {
+            next();
+            return;
+        }
+
         // Знаходимо додаток по домену
         const result = await query(
             'SELECT * FROM apps WHERE domain = $1 AND active = TRUE',
@@ -38,29 +45,20 @@ export async function tenantMiddleware(
         );
 
         if (result.rows.length === 0) {
-
-            // Якщо домен не знайдено, використовуємо дефолтний (для development)
-            if (process.env.NODE_ENV === 'development') {
-                req.tenant = {
-                    app_id: 'default',
-                    domain: hostname,
-                    team_id: 'DEV123',
-                    bundle_id: 'com.default.app',
-                    app_name: 'Default App',
-                    api_key: 'test_api_key_12345',
-                    app_store_url: process.env.APP_STORE_URL || '',
-                    appsflyer_dev_key: process.env.APPSFLYER_DEV_KEY || '',
-                    appsflyer_enabled: true,
-                };
-                next();
-                return; // Added return here to prevent further execution
-            }
-
-            res.status(404).json({
-                error: 'App not found for this domain',
-                domain: hostname
-            });
-            return; // Moved return here
+            // Використовуємо дефолтний тенант якщо домен не зареєстрований
+            req.tenant = {
+                app_id: 'default',
+                domain: hostname,
+                team_id: 'DEV123',
+                bundle_id: 'com.default.app',
+                app_name: 'Default App',
+                api_key: process.env.API_SECRET_KEY || 'test_api_key_12345',
+                app_store_url: process.env.APP_STORE_URL || '',
+                appsflyer_dev_key: process.env.APPSFLYER_DEV_KEY || '',
+                appsflyer_enabled: true,
+            };
+            next();
+            return;
         }
 
         // Додаємо tenant до request
