@@ -59,7 +59,7 @@
                             align-items: center; justify-content: center;
                             font-size: 28px;
                         ">🔒</div>
-                        <h2 style="color: #f1f5f9; margin: 0 0 8px !important; font-size: 22px; font-weight: 600; text-align: center !important;">
+                        <h2 style="color: #f1f5f9; margin: 0 0 8px !important; font-size: 22px; font-weight: 600; text-align: center !important; display: block !important;">
                             Attribution System
                         </h2>
                         <p style="color: #94a3b8; margin: 0 !important; font-size: 14px; text-align: center !important;">
