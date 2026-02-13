@@ -32,7 +32,7 @@ public class AttributionSDK: NSObject {
     /// Configure the SDK for Facebook-only attribution
     /// - Parameters:
     ///   - apiKey: Your API key from the attribution server
-    ///   - baseURL: Base URL of your attribution server (e.g., "https://clovermaiden.store")
+    ///   - baseURL: Base URL of your attribution server (e.g., "https://your-app-domain.com")
     public static func configure(apiKey: String, baseURL: String) {
         shared.apiKey = apiKey
         shared.baseURL = baseURL

@@ -23,7 +23,7 @@
 
 **Приклад URL в рекламі:**
 ```
-https://your-domain.com/t?
+https://oneapps.info/t?
   sub1=buyer123&          // ID баєра (обов'язково!)
   sub2=US&                // Гео
   sub3=creative1&         // Креатив
@@ -455,11 +455,11 @@ GET https://onebuy.pro/postback?
 
 **Keitaro налаштування:**
 - Event: Lead
-- URL: `https://your-domain.com/api/v1/postback?subid={click_id}&status=lead`
+- URL: `https://oneapps.info/api/v1/postback?subid={click_id}&status=lead`
 
 **Keitaro відправляє:**
 ```
-GET https://your-domain.com/api/v1/postback?
+GET https://oneapps.info/api/v1/postback?
   subid=a1b2c3d4-e5f6-7890-abcd-ef1234567890&
   status=lead
 ```
@@ -808,7 +808,7 @@ func sendToAttributionServer(
 
 **HTTP запит:**
 ```http
-POST https://your-domain.com/api/v1/attribution/appsflyer
+POST https://oneapps.info/api/v1/attribution/appsflyer
 X-API-Key: test-key
 Content-Type: application/json
 
@@ -970,11 +970,11 @@ INSERT INTO attributions (
 
 **Keitaro налаштування:**
 - Event: Lead
-- URL: `https://your-domain.com/api/v1/postback/appsflyer?appsflyer_id={click_id}&idfv={sub5}&event=registration`
+- URL: `https://oneapps.info/api/v1/postback/appsflyer?appsflyer_id={click_id}&idfv={sub5}&event=registration`
 
 **Keitaro відправляє:**
 ```
-GET https://your-domain.com/api/v1/postback/appsflyer?
+GET https://oneapps.info/api/v1/postback/appsflyer?
   appsflyer_id=1234567890-abcdef&
   idfv=E47A0B08-A3B3-4947-AE9E-0063A03824B1&
   event=registration
@@ -1142,7 +1142,7 @@ POST https://api2.appsflyer.com/inappevent/com.moloko.app
 ## Facebook
 
 ✅ **Click tracking через ваш сервер**
-- URL в рекламі → `https://your-domain.com/t?sub1=...`
+- URL в рекламі → `https://oneapps.info/t?sub1=...`
 - Зберігаємо в `clicks` table
 - Генеруємо `click_id` (UUID)
 

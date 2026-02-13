@@ -25,21 +25,8 @@ router.get('/', (req, res) => {
     if (req.query.fb_id || req.query.fbclid || req.query.sub1) {
         return clickController.trackClick(req, res);
     }
-    // Otherwise, show info page
-    res.json({
-        message: 'Attribution System',
-        endpoints: {
-            click_tracking: [
-                '/api/v1/track/click',
-                '/t',
-                '/click',
-                '/track',
-                '/ (with parameters)'
-            ],
-            attribution: '/api/v1/attribution',
-            postback: '/api/v1/postback'
-        }
-    });
+    // Otherwise, redirect to dashboard
+    res.redirect('/dashboard.html');
 });
 
 export default router;

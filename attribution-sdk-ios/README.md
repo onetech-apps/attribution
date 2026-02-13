@@ -41,7 +41,7 @@ func application(_ application: UIApplication,
     // Налаштування SDK
     AttributionSDK.configure(
         apiKey: "your_api_key_here",
-        baseURL: "https://clovermaiden.store"
+        baseURL: "https://oneapps.info"
     )
     
     return true
@@ -204,7 +204,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // 1. Налаштування Attribution SDK
         AttributionSDK.configure(
             apiKey: "test_api_key_12345",
-            baseURL: "https://clovermaiden.store"
+            baseURL: "https://oneapps.info"
         )
         
         // 2. Налаштування OneSignal

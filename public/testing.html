@@ -435,8 +435,8 @@
                     <div style="margin-bottom: 15px;">
                         <label>Tracking Link URL</label>
                         <div style="display: flex; gap: 10px;">
-                            <input type="text" id="verifyUrl" placeholder="https://clovermaiden.store?sub1=..."
-                                value="https://clovermaiden.store/?sub1=test_campaign">
+                            <input type="text" id="verifyUrl" placeholder="https://oneapps.info?sub1=..."
+                                value="https://oneapps.info/?sub1=test_campaign">
                             <button class="btn" onclick="verifyLink()" id="verifyBtn"><i data-lucide="play"
                                     size="16"></i> Запустити тест</button>
                         </div>
@@ -786,7 +786,7 @@
             const app = appsList.find(a => a.id == appId);
 
             // Use app domain if selected, otherwise fallback to current host or hardcoded
-            let baseUrl = 'https://clovermaiden.store';
+            let baseUrl = window.location.origin;
             if (app && app.domain) {
                 baseUrl = `https://${app.domain}`;
             } else if (!app) {

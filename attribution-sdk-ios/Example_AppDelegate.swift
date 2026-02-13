@@ -15,7 +15,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //
         // AttributionSDK.configure(
         //     apiKey: "your_api_key",
-        //     baseURL: "https://clovermaiden.store"
+        //     baseURL: "https://your-app-domain.com"
         // )
         //
         // if isFirstLaunch() {
@@ -29,7 +29,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         AttributionSDK.configure(
             apiKey: "test_api_key_12345",
             baseURL: "http://localhost:3000",      // Для тестування
-            // baseURL: "https://clovermaiden.store",  // Для production
+            // baseURL: "https://your-app-domain.com",  // Для production
             appsFlyerDevKey: "YOUR_APPSFLYER_DEV_KEY",
             appleAppID: "123456789"
         )
