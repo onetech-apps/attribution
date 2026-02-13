@@ -59,10 +59,10 @@
                             align-items: center; justify-content: center;
                             font-size: 28px;
                         ">🔒</div>
-                        <h2 style="color: #f1f5f9; margin: 0 0 8px; font-size: 22px; font-weight: 600;">
+                        <h2 style="color: #f1f5f9; margin: 0 0 8px; font-size: 22px; font-weight: 600; text-align: center;">
                             Attribution System
                         </h2>
-                        <p style="color: #94a3b8; margin: 0; font-size: 14px;">
+                        <p style="color: #94a3b8; margin: 0; font-size: 14px; text-align: center;">
                             Введіть пароль для доступу
                         </p>
                     </div>
