@@ -824,8 +824,27 @@
             document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
             if (tab === 'dashboard') {
                 document.querySelector('.nav-tab:first-child').classList.add('active');
+                // Update URL to remove ?tab= parameter
+                history.replaceState(null, '', 'dashboard.html');
+                // Load dashboard data
+                loadData();
+                loadEvents();
+                // Enable auto-refresh
+                document.getElementById('autoRefresh').checked = true;
+                toggleAutoRefresh();
             } else if (tab === 'logs') {
                 document.querySelector('.nav-tab:nth-child(2)').classList.add('active');
+                // Update URL
+                history.replaceState(null, '', 'dashboard.html?tab=logs');
+                // Stop dashboard auto-refresh
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+                if (eventInterval) {
+                    clearInterval(eventInterval);
+                    eventInterval = null;
+                }
                 loadLogs('postbacks');
             }
         }
@@ -933,7 +952,7 @@
                     tbody.innerHTML = data.clicks.map(click => `
                         <tr>
                             <td class="timestamp">${new Date(click.created_at).toLocaleString('uk-UA')}</td>
-                            <td><code style="color: var(--primary); font-weight: 600;">${click.click_id.substring(0, 12)}...</code></td>
+                            <td><code style="color: var(--primary); font-weight: 600; cursor: pointer;" title="${click.click_id}" onclick="navigator.clipboard.writeText('${click.click_id}')">${click.click_id.substring(0, 12)}...</code></td>
                             <td>${click.ip_address}</td>
                             <td><span class="badge badge-info">${click.sub1 || '-'}</span></td>
                             <td>${click.sub2 || '-'}</td>
@@ -1099,20 +1118,10 @@
             }
         }
 
-        // Check URL params for tab
+        // Initialize based on URL params
         const urlParams = new URLSearchParams(window.location.search);
         const tabParam = urlParams.get('tab');
-
-        if (tabParam === 'logs') {
-            switchTab('logs');
-        } else {
-            // Load data on page load
-            loadData();
-            loadEvents();
-            // Enable auto-refresh by default for events
-            document.getElementById('autoRefresh').checked = true;
-            toggleAutoRefresh();
-        }
+        switchTab(tabParam === 'logs' ? 'logs' : 'dashboard');
 
         // Initial icon render
         lucide.createIcons();
