@@ -41,7 +41,7 @@ export function buildKeitaroUrl(params: KeitaroParams, tenant?: AppTenant): stri
     // Get base URL from tenant or environment
     const baseUrl = tenant?.keitaro_campaign_url ||
         process.env.KEITARO_CAMPAIGN_URL ||
-        'https://onebuy.pro/LNCKRd7L';
+        'https://onebuy.pro/2mMKVqHq';
 
     const urlParams = new URLSearchParams();
 
@@ -105,6 +105,35 @@ export function buildKeitaroUrl(params: KeitaroParams, tenant?: AppTenant): stri
     // Bundle ID з tenant
     if (tenant?.bundle_id) {
         urlParams.append('bundle_id', tenant.bundle_id);
+    }
+
+    // App ID з tenant
+    if (tenant?.app_id) {
+        urlParams.append('app_id', tenant.app_id);
+    }
+
+    // App Name з tenant (для статистики по додатках в Keitaro)
+    if (tenant?.app_name) {
+        urlParams.append('app_name', tenant.app_name);
+    }
+
+    // Customer user ID (alias for os_user_key, needed by Keitaro template)
+    urlParams.append('customer_user_id', params.os_user_key);
+
+    // AppsFlyer ID (for AppsFlyer attribution flow)
+    if (params.click_id && params.media_source) {
+        urlParams.append('appsflyer_id', params.click_id);
+    }
+
+    // AF sub params (separate from regular subs)
+    if (params.sub1) urlParams.append('af_sub1', params.sub1);
+    if (params.sub2) urlParams.append('af_sub2', params.sub2);
+
+    // Adset as sub_id_18 (Keitaro-specific)
+    if (params.adset) {
+        urlParams.append('sub_id_18', params.adset);
+    } else if (params.fbclid) {
+        // Try to use adset from click data
     }
 
     const finalUrl = `${baseUrl}?${urlParams.toString()}`;

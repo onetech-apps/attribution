@@ -85,7 +85,7 @@ export class ClickController {
      * Build Keitaro campaign URL with all parameters
      */
     private buildKeitaroUrl(params: any, clickId: string): string {
-        const baseUrl = process.env.KEITARO_CAMPAIGN_URL || 'https://onebuy.pro/LNCKRd7L';
+        const baseUrl = process.env.KEITARO_CAMPAIGN_URL || 'https://onebuy.pro/2mMKVqHq';
 
         // Build query parameters for Keitaro
         const queryParams = new URLSearchParams();

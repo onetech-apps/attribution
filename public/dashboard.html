@@ -9,6 +9,18 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        .copyable {
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .copyable:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+
         :root {
             --primary: #6366f1;
             /* Indigo-500 */
@@ -816,6 +828,18 @@
     <script>
         const API_BASE = '/api/v1';
 
+        function copyVal(text, el) {
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = el.textContent;
+                el.textContent = '✅ Copied!';
+                el.style.color = 'var(--success)';
+                setTimeout(() => {
+                    el.textContent = orig;
+                    el.style.color = '';
+                }, 1000);
+            });
+        }
+
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
             document.getElementById(tab).style.display = 'block';
@@ -952,8 +976,8 @@
                     tbody.innerHTML = data.clicks.map(click => `
                         <tr>
                             <td class="timestamp">${new Date(click.created_at).toLocaleString('uk-UA')}</td>
-                            <td><code style="color: var(--primary); font-weight: 600; cursor: pointer;" title="${click.click_id}" onclick="navigator.clipboard.writeText('${click.click_id}')">${click.click_id.substring(0, 12)}...</code></td>
-                            <td>${click.ip_address}</td>
+                            <td><code class="copyable" title="Натисніть щоб скопіювати: ${click.click_id}" onclick="copyVal('${click.click_id}', this)">${click.click_id.substring(0, 12)}...</code></td>
+                            <td><code class="copyable" title="Натисніть щоб скопіювати" onclick="copyVal('${click.ip_address}', this)">${click.ip_address}</code></td>
                             <td><span class="badge badge-info">${click.sub1 || '-'}</span></td>
                             <td>${click.sub2 || '-'}</td>
                             <td>${click.fbclid ? '<i data-lucide="check" size="14" style="color: var(--success)"></i> ' : '-'}</td>
@@ -1001,11 +1025,11 @@
                     tbody.innerHTML = data.attributions.map(attr => `
                         <tr>
                             <td class="timestamp">${new Date(attr.created_at).toLocaleString('uk-UA')}</td>
-                            <td><code title="${attr.os_user_key}">${attr.os_user_key.substring(0, 16)}...</code></td>
-                            <td>${attr.click_id ? `<code title="${attr.click_id}">${attr.click_id.substring(0, 12)}...</code>` : '<span class="badge badge-info"><i data-lucide="leaf" size="12"></i> Organic</span>'}</td>
+                            <td><code class="copyable" title="Натисніть щоб скопіювати: ${attr.os_user_key}" onclick="copyVal('${attr.os_user_key}', this)">${attr.os_user_key.substring(0, 16)}...</code></td>
+                            <td>${attr.click_id ? `<code class="copyable" title="Натисніть щоб скопіювати: ${attr.click_id}" onclick="copyVal('${attr.click_id}', this)">${attr.click_id.substring(0, 12)}...</code>` : '<span class="badge badge-info"><i data-lucide="leaf" size="12"></i> Organic</span>'}</td>
                             <td><span class="badge badge-secondary">${attr.push_sub || '-'}</span></td>
-                            <td class="url-preview" title="${attr.final_url || ''}">${attr.final_url || '-'}</td>
-                            <td><code title="${attr.idfv}">${attr.idfv.substring(0, 12)}...</code></td>
+                            <td><code class="copyable url-preview" title="Натисніть щоб скопіювати: ${attr.final_url || ''}" onclick="copyVal('${(attr.final_url || '').replace(/'/g, "\\'")}', this)">${attr.final_url ? attr.final_url.substring(0, 30) + '...' : '-'}</code></td>
+                            <td><code class="copyable" title="Натисніть щоб скопіювати: ${attr.idfv}" onclick="copyVal('${attr.idfv}', this)">${attr.idfv.substring(0, 12)}...</code></td>
                         </tr>
                     `).join('');
                     lucide.createIcons();
