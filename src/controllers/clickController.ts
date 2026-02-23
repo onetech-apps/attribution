@@ -66,6 +66,12 @@ export class ClickController {
             // Redirect to App Store (tenant-specific or default)
             const appStoreUrl = tenant?.app_store_url || process.env.APP_STORE_URL || 'https://apps.apple.com';
 
+            if (!tenant?.app_store_url) {
+                console.warn('⚠️ No app_store_url for tenant! Using fallback:', appStoreUrl,
+                    '| Tenant:', tenant?.app_name || 'NONE',
+                    '| Domain:', req.hostname);
+            }
+
             console.log('🔄 Redirecting to App Store:', appStoreUrl);
             res.redirect(302, appStoreUrl);
         } catch (error: any) {

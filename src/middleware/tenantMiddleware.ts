@@ -39,9 +39,17 @@ export async function tenantMiddleware(
         }
 
         // Знаходимо додаток по домену
+        // req.hostname = 'hedipod.online', but DB may store 'https://hedipod.online' or 'hedipod.online'
         const result = await query(
-            'SELECT * FROM apps WHERE domain = $1 AND active = TRUE',
-            [hostname]
+            `SELECT * FROM apps WHERE 
+                (domain = $1 OR domain = $2 OR domain = $3 OR domain = $4)
+                AND active = TRUE`,
+            [
+                hostname,                          // hedipod.online
+                `https://${hostname}`,              // https://hedipod.online
+                `http://${hostname}`,               // http://hedipod.online
+                `https://www.${hostname}`,          // https://www.hedipod.online
+            ]
         );
 
         if (result.rows.length === 0) {

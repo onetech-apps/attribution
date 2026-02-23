@@ -509,12 +509,32 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Facebook Pixel ID</label>
-                            <input type="text" id="gen_pixel" placeholder="123456789">
+                            <label>sub1 (назва кампанії / buyer ID)</label>
+                            <input type="text" id="gen_sub1" placeholder="campaign_name" oninput="updateUrlPreview()">
                         </div>
                         <div class="form-group">
-                            <label>Назва кампанії (sub1)</label>
-                            <input type="text" id="gen_sub1" value="test_campaign">
+                            <label>sub2 (гео)</label>
+                            <input type="text" id="gen_sub2" placeholder="US" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>sub3 (креатив)</label>
+                            <input type="text" id="gen_sub3" placeholder="creative_1" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>sub4</label>
+                            <input type="text" id="gen_sub4" placeholder="" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>sub5</label>
+                            <input type="text" id="gen_sub5" placeholder="" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Facebook Pixel ID</label>
+                            <input type="text" id="gen_pixel" placeholder="123456789" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Facebook Token</label>
+                            <input type="text" id="gen_fb_token" placeholder="EAAxxxxxxx" oninput="updateUrlPreview()">
                         </div>
                         <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; word-break: break-all; font-family: monospace; font-size: 12px; margin-bottom: 10px;"
                             id="urlPreview">
@@ -785,10 +805,12 @@
             const appId = select.value;
             const app = appsList.find(a => a.id == appId);
 
-            // Use app domain if selected, otherwise fallback to current host or hardcoded
+            // Use app domain if selected, otherwise fallback to current host
             let baseUrl = window.location.origin;
             if (app && app.domain) {
-                baseUrl = `https://${app.domain}`;
+                // Strip protocol if domain already includes it
+                const cleanDomain = app.domain.replace(/^https?:\/\//, '');
+                baseUrl = `https://${cleanDomain}`;
             } else if (!app) {
                 // Try to guess or warn
             }
@@ -876,11 +898,28 @@
         function updateUrlPreview() {
             const select = document.getElementById('appSelector');
             const app = appsList.find(a => a.id == select.value);
-            const pixel = document.getElementById('gen_pixel').value;
             const sub1 = document.getElementById('gen_sub1').value;
-            let domain = app ? app.domain : 'your-domain.com';
-            let url = `https://${domain}/?sub1=${sub1 || 'campaign'}&sub2=facebook`;
-            if (pixel) url += `&fb_id=${pixel}`;
+            const sub2 = document.getElementById('gen_sub2').value;
+            const sub3 = document.getElementById('gen_sub3').value;
+            const sub4 = document.getElementById('gen_sub4').value;
+            const sub5 = document.getElementById('gen_sub5').value;
+            const pixel = document.getElementById('gen_pixel').value;
+            const fbToken = document.getElementById('gen_fb_token').value;
+
+            // Strip protocol if domain already includes it
+            let domain = app ? app.domain.replace(/^https?:\/\//, '') : 'your-domain.com';
+
+            const params = new URLSearchParams();
+            if (sub1) params.set('sub1', sub1);
+            if (sub2) params.set('sub2', sub2);
+            if (sub3) params.set('sub3', sub3);
+            if (sub4) params.set('sub4', sub4);
+            if (sub5) params.set('sub5', sub5);
+            if (pixel) params.set('fb_id', pixel);
+            if (fbToken) params.set('fb_token', fbToken);
+
+            const queryString = params.toString();
+            const url = `https://${domain}/${queryString ? '?' + queryString : ''}`;
             document.getElementById('urlPreview').textContent = url;
         }
 
