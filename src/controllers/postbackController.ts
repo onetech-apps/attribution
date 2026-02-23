@@ -33,8 +33,23 @@ export class PostbackController {
 
             if (clickResult.rows.length === 0) {
                 console.warn('⚠️  Click not found for subid:', subid);
-                eventLogger.log('postback', `Postback ignored: Click not found`, { subid });
-                res.status(404).json({ error: 'Click not found' });
+
+                const responseBody = {
+                    error: `Клік не знайдено за ID: ${(subid as string).substring(0, 20)}...`,
+                    click_id: subid,
+                    status
+                };
+
+                eventLogger.log('postback', `Postback ignored: Click not found`, {
+                    click_id: subid,
+                    url: req.originalUrl,
+                    method: req.method,
+                    payload: req.query,
+                    response_status: 404,
+                    response_body: responseBody
+                });
+
+                res.status(404).json(responseBody);
                 return;
             }
 
@@ -43,8 +58,27 @@ export class PostbackController {
             // Check if we have Facebook credentials
             if (!click.fbclid || !click.fb_id || !click.fb_token) {
                 console.log('⚠️  No Facebook credentials for this click, skipping FB event');
-                eventLogger.log('postback', `Postback processed (no FB) based on ${status}`, { subid });
-                res.json({ success: true, message: 'Postback received (no FB tracking)' });
+
+                const responseBody = {
+                    success: true,
+                    message: `Постбек отримано (статус: ${status}). Клік знайдено, але немає FB Pixel — подію у Facebook не відправлено.`,
+                    click_id: subid,
+                    status,
+                    click_found: true,
+                    fb_tracking: false,
+                    fb_reason: !click.fbclid ? 'Немає fbclid' : !click.fb_id ? 'Немає FB Pixel ID' : 'Немає FB Token'
+                };
+
+                eventLogger.log('postback', `Postback: ${status} (no FB)`, {
+                    click_id: subid,
+                    url: req.originalUrl,
+                    method: req.method,
+                    payload: req.query,
+                    response_status: 200,
+                    response_body: responseBody
+                });
+
+                res.json(responseBody);
                 return;
             }
 

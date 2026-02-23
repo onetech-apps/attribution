@@ -2,6 +2,7 @@ import { query } from '../config/database';
 import { config } from '../config';
 import { ClickData, DeviceInfo } from '../types';
 import { calculateUserAgentSimilarity } from '../utils/helpers';
+import { eventLogger } from '../utils/eventLogger';
 
 export class AttributionService {
     /**
@@ -70,6 +71,11 @@ export class AttributionService {
 
             if (timeDiff < 5) {
                 console.warn('Suspicious: Attribution too fast', { timeDiff });
+                eventLogger.log('error', 'Fraud Detection: Fast Click', {
+                    click_id: click.click_id,
+                    time_diff_seconds: timeDiff,
+                    ip: deviceInfo.ip
+                });
                 return true;
             }
 
@@ -84,6 +90,11 @@ export class AttributionService {
             const count = parseInt(result.rows[0].count, 10);
             if (count > 5) {
                 console.warn('Suspicious: Too many attributions from same IP', { count, ip: deviceInfo.ip });
+                eventLogger.log('error', 'Fraud Detection: IP Flooding', {
+                    click_id: click.click_id,
+                    attributions_per_hour: count,
+                    ip: deviceInfo.ip
+                });
                 return true;
             }
 

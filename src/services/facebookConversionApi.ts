@@ -4,6 +4,7 @@
  */
 
 import axios from 'axios';
+import { eventLogger } from '../utils/eventLogger';
 
 interface FacebookEventParams {
     eventName: string; // APP_INSTALL, COMPLETE_REGISTRATION, PURCHASE
@@ -69,6 +70,10 @@ export class FacebookConversionApi {
             console.error('❌ Facebook Conversion API error:', {
                 event: params.eventName,
                 error: error.response?.data || error.message,
+            });
+            eventLogger.log('error', `Facebook API Error: ${params.eventName}`, {
+                pixel_id: params.pixelId,
+                error: error.response?.data || error.message
             });
             // Don't throw - we don't want to fail attribution if FB API fails
         }

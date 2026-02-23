@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { eventLogger } from '../utils/eventLogger';
 
 /**
  * AppsFlyer S2S Events API Service
@@ -51,6 +52,10 @@ export class AppsFlyerEventsService {
         } catch (error: any) {
             console.error('❌ AppsFlyer S2S error:', {
                 eventName,
+                error: error.response?.data || error.message
+            });
+            eventLogger.log('error', `AppsFlyer S2S Error: ${eventName}`, {
+                appsflyer_id: appsflyerId,
                 error: error.response?.data || error.message
             });
             throw new Error(`AppsFlyer API error: ${error.message}`);
