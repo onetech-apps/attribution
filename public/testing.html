@@ -502,6 +502,9 @@
                     <!-- URL Generator -->
                     <div style="border: 1px solid var(--border); padding: 20px; border-radius: 12px;">
                         <h3><i data-lucide="link" size="18"></i> Генератор URL</h3>
+                        <p style="color: var(--secondary); font-size: 13px; margin: 8px 0 16px;">📝 Створює
+                            трекінг-посилання для реклами. Юзер клікає на це посилання → переходить в App Store →
+                            встановлює додаток. Сервер запам'ятовує клік для атрибуції.</p>
                         <div class="form-group" style="margin-top: 15px;">
                             <label>Додаток</label>
                             <select id="appSelector" onchange="updateUrlPreview()">
@@ -548,9 +551,20 @@
                     <!-- Postback Sender -->
                     <div style="border: 1px solid var(--border); padding: 20px; border-radius: 12px;">
                         <h3><i data-lucide="send" size="18"></i> Тест постбеку</h3>
+                        <p style="color: var(--secondary); font-size: 13px; margin: 8px 0 16px;">📤 Імітує повідомлення
+                            від CPA-мережі: "Цей клік конвертувався!" Якщо у кліка є FB Pixel — відправить подію
+                            конверсії у Facebook для оптимізації реклами.</p>
                         <div class="form-group" style="margin-top: 15px;">
                             <label>Click ID</label>
-                            <input type="text" id="pb_click_id" placeholder="From DB...">
+                            <input type="text" id="pb_click_id" placeholder="clk_xxxxxxxxxx... (з таблиці кліків)">
+                        </div>
+                        <div class="form-group">
+                            <label>Статус конверсії</label>
+                            <select id="pb_status">
+                                <option value="lead">lead — реєстрація</option>
+                                <option value="sale">sale — депозит/оплата</option>
+                                <option value="reject">reject — відхилено</option>
+                            </select>
                         </div>
                         <button class="btn" onclick="sendTestPostback()"><i data-lucide="send" size="14"></i> Надіслати
                             Postback</button>
@@ -561,14 +575,31 @@
                 <!-- Attribution Simulator -->
                 <div class="section" style="margin-top: 24px;">
                     <h2>🎯 Симулятор Attribution</h2>
+                    <p style="color: var(--secondary); font-size: 13px; margin: 8px 0 16px;">📱 Імітує перший запуск
+                        додатку. Відправляє дані пристрою на сервер → сервер шукає відповідний клік за IP → повертає
+                        <b>final_url</b> (посилання на оффер у Keitaro) для показу у WebView додатку.
+                    </p>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label>IDFV</label>
-                            <input type="text" id="attr_idfv" value="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX">
+                            <label>Додаток</label>
+                            <select id="attr_app_select">
+                                <option value="">Завантаження...</option>
+                            </select>
                         </div>
+                        <div class="form-group">
+                            <label>IDFV</label>
+                            <input type="text" id="attr_idfv" value=""
+                                placeholder="03B8DFBA-743F-4A42-91DD-166868073B19">
+                        </div>
+                    </div>
+                    <div class="grid-2">
                         <div class="form-group">
                             <label>Device Model</label>
                             <input type="text" id="attr_device" value="iPhone14,2">
+                        </div>
+                        <div class="form-group">
+                            <label>OS Version</label>
+                            <input type="text" id="attr_os" value="17.0">
                         </div>
                     </div>
                     <button class="btn btn-success" onclick="simulateAttribution()">▶️ Симулювати Attribution</button>
@@ -772,11 +803,15 @@
                 const data = await response.json();
                 if (data.success && data.apps) {
                     appsList = data.apps;
-                    const select = document.getElementById('appSelector');
-                    if (select) {
-                        select.innerHTML = '<option value="">-- Оберіть додаток --</option>' +
-                            appsList.map(app => `<option value="${app.id}">${app.app_name} (${app.domain})</option>`).join('');
-                    }
+                    const optionsHtml = '<option value="">-- Оберіть додаток --</option>' +
+                        appsList.map(app => `<option value="${app.id}">${app.app_name} (${app.domain})</option>`).join('');
+
+                    // Populate all app selectors
+                    const selectors = ['appSelector', 'attr_app_select'];
+                    selectors.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.innerHTML = optionsHtml;
+                    });
                 }
             } catch (error) {
                 console.error('Error loading apps:', error);
@@ -880,6 +915,7 @@
 
         async function sendTestPostback() {
             const clickId = document.getElementById('pb_click_id').value;
+            const status = document.getElementById('pb_status').value;
             if (!clickId) {
                 document.getElementById('pb_result').innerHTML = '<span style="color:var(--danger);">Введіть Click ID</span>';
                 return;
@@ -887,9 +923,13 @@
             const resultDiv = document.getElementById('pb_result');
             resultDiv.innerHTML = '⏳ Відправка...';
             try {
-                const response = await fetch(`${API_BASE}/postback?subid=${clickId}&status=lead`);
+                const response = await fetch(`${API_BASE}/postback?subid=${clickId}&status=${status}`);
                 const res = await response.json();
-                resultDiv.innerHTML = `<pre style="background:#f1f5f9;padding:8px;border-radius:6px;font-size:11px;">${JSON.stringify(res, null, 2)}</pre>`;
+                if (res.success) {
+                    resultDiv.innerHTML = `<pre style="background:#f0fdf4;padding:8px;border-radius:6px;font-size:11px;border:1px solid #bbf7d0;">✅ ${JSON.stringify(res, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<pre style="background:#fef2f2;padding:8px;border-radius:6px;font-size:11px;border:1px solid #fecaca;">❌ ${JSON.stringify(res, null, 2)}</pre>`;
+                }
             } catch (e) {
                 resultDiv.innerHTML = `<span style="color:var(--danger);">❌ ${e.message}</span>`;
             }
@@ -948,6 +988,58 @@
 
         // Initialize (single call)
         lucide.createIcons();
+
+        async function simulateAttribution() {
+            const idfv = document.getElementById('attr_idfv').value;
+            const device = document.getElementById('attr_device').value;
+            const osVersion = document.getElementById('attr_os').value || '17.0';
+            const resultDiv = document.getElementById('attributionResult');
+
+            if (!idfv) {
+                resultDiv.innerHTML = '<pre style="color: var(--danger);">⚠️ Введіть IDFV пристрою</pre>';
+                return;
+            }
+
+            // Get selected app's API key from the local selector
+            const select = document.getElementById('attr_app_select');
+            const appId = select ? select.value : null;
+            const app = appId ? appsList.find(a => a.id == appId) : null;
+            const apiKey = app ? app.api_key : null;
+
+            if (!apiKey) {
+                resultDiv.innerHTML = '<pre style="color: var(--danger);">⚠️ Оберіть додаток зі списку вище</pre>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<pre>⏳ Відправляю запит...</pre>';
+
+            try {
+                const response = await fetch(`${API_BASE}/attribution`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify({
+                        idfv: idfv,
+                        device_model: device,
+                        user_agent: navigator.userAgent,
+                        os_version: osVersion,
+                        app_version: '1.0'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `<pre style="background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">✅ Відповідь (${response.status}):\n${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<pre style="background: #fef2f2; padding: 12px; border-radius: 8px; border: 1px solid #fecaca;">❌ Помилка (${response.status}):\n${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<pre style="color: var(--danger);">❌ ${e.message}</pre>`;
+            }
+        }
     </script>
 </body>
 

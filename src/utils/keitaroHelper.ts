@@ -45,103 +45,91 @@ export function buildKeitaroUrl(params: KeitaroParams, tenant?: AppTenant): stri
 
     const urlParams = new URLSearchParams();
 
-    // ===== Unified parameters (для обох джерел) =====
+    // ===== Keitaro campaign parameters (matching macros exactly) =====
 
-    // Click ID (для postback)
-    if (params.click_id) {
-        urlParams.append('click_id', params.click_id);
-        urlParams.append('external_id', params.click_id);  // Alias для Keitaro
+    // app_name = {app_name}
+    if (tenant?.app_name) {
+        urlParams.append('app_name', tenant.app_name);
     }
 
-    // Sub parameters (buyer ID, geo, creative, etc.)
+    // appsflyer_id = {appsflyer_id}
+    if (params.click_id) {
+        urlParams.append('appsflyer_id', params.click_id);
+    }
+
+    // customer_user_id = {customer_user_id}
+    urlParams.append('customer_user_id', params.os_user_key);
+
+    // source = {media_source}
+    if (params.media_source) {
+        urlParams.append('source', params.media_source);
+    }
+
+    // bundle = {bundle}
+    const bundleValue = params.bundle || tenant?.bundle_id;
+    if (bundleValue) {
+        urlParams.append('bundle', bundleValue);
+    }
+
+    // campaign = {campaign}
+    if (params.campaign) {
+        urlParams.append('campaign', params.campaign);
+    }
+
+    // af_sub1 = {af_sub1}
+    if (params.sub1) urlParams.append('af_sub1', params.sub1);
+
+    // af_sub2 = {af_sub2}
+    if (params.sub2) urlParams.append('af_sub2', params.sub2);
+
+    // push_sub = {push_sub}
+    if (params.push_sub) {
+        urlParams.append('push_sub', params.push_sub);
+    }
+
+    // ===== Additional parameters =====
+
+    // Sub parameters (for Keitaro internal routing)
     if (params.sub1) urlParams.append('sub1', params.sub1);
     if (params.sub2) urlParams.append('sub2', params.sub2);
     if (params.sub3) urlParams.append('sub3', params.sub3);
     if (params.sub4) urlParams.append('sub4', params.sub4);
     if (params.sub5) urlParams.append('sub5', params.sub5);
-    if (params.sub6) urlParams.append('sub6', params.sub6);  // IDFV для AppsFlyer postback
+    if (params.sub6) urlParams.append('sub6', params.sub6);  // IDFV
 
-    // Push sub (для push notifications)
+    // Click ID & external ID (for postback routing)
+    if (params.click_id) {
+        urlParams.append('click_id', params.click_id);
+        urlParams.append('external_id', params.click_id);
+    }
+
+    // OS User Key
+    urlParams.append('os_user_key', params.os_user_key);
+
+    // Push (alias)
     if (params.push_sub) {
         urlParams.append('push', params.push_sub);
-        urlParams.append('push_sub', params.push_sub);  // Alias
     }
 
-    // OS User Key (унікальний ключ користувача)
-    urlParams.append('os_user_key', params.os_user_key);
-    urlParams.append('af_userid', params.os_user_key);  // Alias для сумісності
-
-    // ===== Facebook-specific parameters =====
-
-    if (params.fbclid) {
-        urlParams.append('fbclid', params.fbclid);
-    }
-
+    // Facebook-specific
+    if (params.fbclid) urlParams.append('fbclid', params.fbclid);
     if (params.adset) {
         urlParams.append('adset', params.adset);
-    }
-
-    // ===== AppsFlyer-specific parameters =====
-
-    if (params.media_source) {
-        urlParams.append('media_source', params.media_source);
-        urlParams.append('source', params.media_source);  // Alias
-    }
-
-    if (params.campaign) {
-        urlParams.append('campaign', params.campaign);
-    }
-
-    // ===== Device info =====
-
-    if (params.bundle) {
-        urlParams.append('bundle', params.bundle);
-    }
-
-    if (params.app_version) {
-        urlParams.append('app_version', params.app_version);
-    }
-
-    // Bundle ID з tenant
-    if (tenant?.bundle_id) {
-        urlParams.append('bundle_id', tenant.bundle_id);
-    }
-
-    // App ID з tenant
-    if (tenant?.app_id) {
-        urlParams.append('app_id', tenant.app_id);
-    }
-
-    // App Name з tenant (для статистики по додатках в Keitaro)
-    if (tenant?.app_name) {
-        urlParams.append('app_name', tenant.app_name);
-    }
-
-    // Customer user ID (alias for os_user_key, needed by Keitaro template)
-    urlParams.append('customer_user_id', params.os_user_key);
-
-    // AppsFlyer ID (for AppsFlyer attribution flow)
-    if (params.click_id && params.media_source) {
-        urlParams.append('appsflyer_id', params.click_id);
-    }
-
-    // AF sub params (separate from regular subs)
-    if (params.sub1) urlParams.append('af_sub1', params.sub1);
-    if (params.sub2) urlParams.append('af_sub2', params.sub2);
-
-    // Adset as sub_id_18 (Keitaro-specific)
-    if (params.adset) {
         urlParams.append('sub_id_18', params.adset);
-    } else if (params.fbclid) {
-        // Try to use adset from click data
     }
+
+    // App version
+    if (params.app_version) urlParams.append('app_version', params.app_version);
 
     const finalUrl = `${baseUrl}?${urlParams.toString()}`;
 
     console.log('🔗 Built Keitaro URL:', {
-        source: params.fbclid ? 'facebook' : params.media_source ? 'appsflyer' : 'unknown',
+        source: params.fbclid ? 'facebook' : params.media_source ? `appsflyer/${params.media_source}` : 'organic',
+        app_name: tenant?.app_name || 'unknown',
         click_id: params.click_id?.substring(0, 10) + '...',
         push_sub: params.push_sub,
+        bundle: bundleValue,
+        campaign: params.campaign,
         url_length: finalUrl.length
     });
 
@@ -164,6 +152,8 @@ export function extractFacebookParams(click: any, osUserKey: string, deviceInfo:
         os_user_key: osUserKey,
         fbclid: click?.fbclid || undefined,
         adset: click?.adsetid || undefined,
+        media_source: click?.fbclid ? 'facebook' : undefined,  // source=facebook для FB кліків
+        campaign: click?.sub1 || undefined,  // sub1 як назва кампанії
         bundle: deviceInfo.bundle,
         app_version: deviceInfo.app_version
     };
@@ -185,12 +175,12 @@ export function extractAppsFlyerParams(
         sub3: conversionData.af_sub3 || undefined,
         sub4: conversionData.af_sub4 || undefined,
         sub5: conversionData.af_sub5 || undefined,
-        sub6: conversionData.idfv || deviceInfo.idfv || undefined,  // IDFV в sub6
+        sub6: conversionData.idfv || deviceInfo.idfv || undefined,
         push_sub: conversionData.af_sub1 || 'organic',
         os_user_key: osUserKey,
         media_source: conversionData.media_source || undefined,
         campaign: conversionData.campaign || undefined,
-        bundle: deviceInfo.bundle,
+        bundle: deviceInfo.bundle || undefined,
         app_version: deviceInfo.app_version
     };
 }

@@ -38,9 +38,9 @@ router.post('/attribution/appsflyer', async (req: TenantRequest, res: Response) 
 
         const keitaroParams = extractAppsFlyerParams(
             appsflyer_id,
-            { media_source, campaign, af_sub1, af_sub2, af_sub3, af_sub4, af_sub5 },
+            { media_source, campaign, af_sub1, af_sub2, af_sub3, af_sub4, af_sub5, idfv: customer_user_id },
             osUserKey,
-            { app_version: req.body.app_version, idfv: customer_user_id }
+            { app_version: req.body.app_version, bundle: req.body.bundle_id || req.body.bundle, idfv: customer_user_id }
         );
 
         const finalUrl = buildKeitaroUrl(keitaroParams, req.tenant);

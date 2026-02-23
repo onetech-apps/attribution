@@ -86,7 +86,7 @@ export class AttributionController {
             }
 
             // Build Keitaro campaign URL as final_url
-            const finalUrl = this.buildKeitaroCampaignUrl(matchingClick, osUserKey, pushSub, deviceInfo);
+            const finalUrl = this.buildKeitaroCampaignUrl(matchingClick, osUserKey, pushSub, deviceInfo, (req as any).tenant);
 
             // Save attribution
             await query(
@@ -158,13 +158,14 @@ export class AttributionController {
         matchingClick: any,
         osUserKey: string,
         pushSub: string,
-        deviceInfo: DeviceInfo
+        deviceInfo: DeviceInfo,
+        tenant?: any
     ): string | null {
         // Use unified Keitaro helper
         const { buildKeitaroUrl, extractFacebookParams } = require('../utils/keitaroHelper');
 
         const params = extractFacebookParams(matchingClick, osUserKey, deviceInfo);
-        return buildKeitaroUrl(params);
+        return buildKeitaroUrl(params, tenant);
     }
 
     /**
