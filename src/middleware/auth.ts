@@ -17,13 +17,22 @@ export const validateApiKey = async (
             return;
         }
 
-        // Check if API key exists and is active
-        const result = await query(
+        // Check if API key exists in api_keys table OR apps table
+        let result = await query(
             'SELECT * FROM api_keys WHERE api_key = $1 AND active = true',
             [apiKey]
         );
 
+        // Fallback: check apps table (keys created via apps.html)
         if (result.rows.length === 0) {
+            result = await query(
+                'SELECT app_id as app_name, api_key, active FROM apps WHERE api_key = $1 AND active = true',
+                [apiKey]
+            );
+        }
+
+        if (result.rows.length === 0) {
+            console.warn('⚠️ Invalid API key attempt:', apiKey.substring(0, 15) + '...');
             res.status(403).json({ error: 'Invalid API key' });
             return;
         }

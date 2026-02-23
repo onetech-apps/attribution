@@ -50,6 +50,16 @@ router.post('/admin/apps', async (req: TenantRequest, res: Response) => {
 
         console.log('✅ App created:', app_name);
 
+        // Also insert API key into api_keys table for auth middleware
+        try {
+            await query(
+                'INSERT INTO api_keys (app_name, api_key, active) VALUES ($1, $2, TRUE) ON CONFLICT (api_key) DO NOTHING',
+                [app_name, api_key]
+            );
+        } catch (e) {
+            console.warn('⚠️ Could not insert into api_keys table:', e);
+        }
+
         res.json({
             success: true,
             app: result.rows[0],
