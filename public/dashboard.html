@@ -727,7 +727,7 @@
                                 <th>Click ID</th>
                                 <th>IP</th>
                                 <th>Campaign</th>
-                                <th>Source</th>
+                                <th>Device / OS</th>
                                 <th>FB Click ID</th>
                                 <th>Pixel</th>
                                 <th>Статус</th>
@@ -1030,7 +1030,10 @@
                             <td><code class="copyable" title="Натисніть щоб скопіювати: ${clickIdStr}" onclick="copyVal('${clickIdStr}', this)">${displayId}</code></td>
                             <td><code class="copyable" title="Натисніть щоб скопіювати" onclick="copyVal('${click.ip_address || ''}', this)">${click.ip_address || '-'}</code></td>
                             <td><span class="badge badge-info">${click.sub1 || '-'}</span></td>
-                            <td>${click.sub2 || '-'}</td>
+                            <td>
+                                <div style="font-size: 13px; font-weight: 500;">${click.device_model || 'Unknown Device'}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">${click.os_version ? `iOS ${click.os_version}` : click.browser || 'Unknown OS'}</div>
+                            </td>
                             <td>${click.fbclid ? '<i data-lucide="check" size="14" style="color: var(--success)"></i> ' : '-'}</td>
                             <td>${click.fb_id ? '<i data-lucide="check" size="14" style="color: var(--success)"></i> ' : '-'}</td>
                             <td>
@@ -1083,7 +1086,10 @@
                         return `
                         <tr>
                             <td class="timestamp">${new Date(attr.created_at).toLocaleString('uk-UA')}</td>
-                            <td>${attr.os_user_key ? `<code class="copyable" title="Натисніть щоб скопіювати: ${attr.os_user_key}" onclick="copyVal('${attr.os_user_key}', this)">${attr.os_user_key.substring(0, 16)}...</code>` : '-'}</td>
+                            <td>
+                                <div style="font-size: 13px; font-weight: 500;">${attr.device_model || 'Unknown'}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">iOS ${attr.os_version || '?'}</div>
+                            </td>
                             <td>${attr.click_id ? `<code class="copyable" title="Натисніть щоб скопіювати: ${attr.click_id}" onclick="copyVal('${attr.click_id}', this)">${attr.click_id.substring(0, 12)}...</code>` : '<span class="badge badge-info"><i data-lucide="leaf" size="12"></i> Organic</span>'}</td>
                             <td><span class="badge badge-secondary">${attr.push_sub || '-'}</span></td>
                             <td><code class="copyable url-preview" title="Натисніть щоб скопіювати: ${attr.final_url || ''}" onclick="copyVal('${(attr.final_url || '').replace(/'/g, "\\'")}', this)">${attr.final_url ? attr.final_url.substring(0, 30) + '...' : '-'}</code></td>
@@ -1178,10 +1184,11 @@
         }
 
         async function loadData(btnElement = null) {
-            let icon = null;
+            let svgIcon = null;
             if (btnElement) {
-                icon = btnElement.querySelector('i');
-                if (icon) icon.classList.add('icon-spinning');
+                // Find inner svg directly (Lucide replaces <i> with <svg>)
+                svgIcon = btnElement.querySelector('svg');
+                if (svgIcon) svgIcon.classList.add('icon-spinning');
                 btnElement.disabled = true;
             }
 
@@ -1194,7 +1201,7 @@
             lucide.createIcons();
 
             if (btnElement) {
-                if (icon) icon.classList.remove('icon-spinning');
+                if (svgIcon) svgIcon.classList.remove('icon-spinning');
                 btnElement.disabled = false;
             }
         }
