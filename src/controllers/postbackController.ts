@@ -89,6 +89,7 @@ export class PostbackController {
                 fbclid: click.fbclid,
                 ip: click.ip_address,
                 userAgent: click.user_agent,
+                clickId: click.click_id
             };
 
             let eventName: string;

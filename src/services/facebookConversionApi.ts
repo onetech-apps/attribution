@@ -16,6 +16,7 @@ interface FacebookEventParams {
     eventTime?: number;
     value?: number;    // Revenue amount (for PURCHASE events)
     currency?: string; // Currency code, e.g. 'USD' (for PURCHASE events)
+    clickId?: string;  // For logging
 }
 
 export class FacebookConversionApi {
@@ -70,6 +71,16 @@ export class FacebookConversionApi {
                 pixel_id: params.pixelId,
                 events_received: response.data.events_received,
             });
+
+            // Log successful outbound postback
+            eventLogger.log('postback', `FB Outbound: ${params.eventName}`, {
+                click_id: params.clickId,
+                url,
+                method: 'POST',
+                payload: { data: [eventData] },
+                response_status: response.status,
+                response_body: response.data
+            });
         } catch (error: any) {
             console.error('❌ Facebook Conversion API error:', {
                 event: params.eventName,
@@ -78,6 +89,16 @@ export class FacebookConversionApi {
             eventLogger.log('error', `Facebook API Error: ${params.eventName}`, {
                 pixel_id: params.pixelId,
                 error: error.response?.data || error.message
+            });
+
+            // Log failed outbound postback too
+            eventLogger.log('postback', `FB Outbound Failed: ${params.eventName}`, {
+                click_id: params.clickId,
+                url,
+                method: 'POST',
+                payload: { data: [eventData] },
+                response_status: error.response?.status || 500,
+                response_body: error.response?.data || error.message
             });
             // Don't throw - we don't want to fail attribution if FB API fails
         }

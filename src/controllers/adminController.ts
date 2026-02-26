@@ -14,17 +14,25 @@ export class AdminController {
     async getClicks(req: Request, res: Response): Promise<void> {
         try {
             const limit = parseInt(req.query.limit as string) || 20;
+            const page = parseInt(req.query.page as string) || 1;
+            const offset = (page - 1) * limit;
+
+            const countResult = await query('SELECT COUNT(*) FROM clicks');
+            const totalCount = parseInt(countResult.rows[0].count);
 
             const result = await query(
                 `SELECT * FROM clicks 
                  ORDER BY created_at DESC 
-                 LIMIT $1`,
-                [limit]
+                 LIMIT $1 OFFSET $2`,
+                [limit, offset]
             );
 
             res.json({
                 clicks: result.rows,
                 count: result.rows.length,
+                total: totalCount,
+                page,
+                totalPages: Math.ceil(totalCount / limit)
             });
         } catch (error) {
             console.error('Error getting clicks:', error);
@@ -39,17 +47,25 @@ export class AdminController {
     async getAttributions(req: Request, res: Response): Promise<void> {
         try {
             const limit = parseInt(req.query.limit as string) || 20;
+            const page = parseInt(req.query.page as string) || 1;
+            const offset = (page - 1) * limit;
+
+            const countResult = await query('SELECT COUNT(*) FROM attributions');
+            const totalCount = parseInt(countResult.rows[0].count);
 
             const result = await query(
                 `SELECT * FROM attributions 
                  ORDER BY created_at DESC 
-                 LIMIT $1`,
-                [limit]
+                 LIMIT $1 OFFSET $2`,
+                [limit, offset]
             );
 
             res.json({
                 attributions: result.rows,
                 count: result.rows.length,
+                total: totalCount,
+                page,
+                totalPages: Math.ceil(totalCount / limit)
             });
         } catch (error) {
             console.error('Error getting attributions:', error);

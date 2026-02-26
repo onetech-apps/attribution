@@ -725,6 +725,15 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination" id="clicksPagination"
+                    style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="changeClicksPage(-1)" id="btnClicksPrev" disabled><i
+                            data-lucide="chevron-left" size="14"></i> Назад</button>
+                    <span style="align-self: center; font-size: 14px; font-weight: 500; color: var(--text-muted);"
+                        id="clicksPageInfo">Сторінка 1</span>
+                    <button class="btn btn-secondary" onclick="changeClicksPage(1)" id="btnClicksNext"><i
+                            data-lucide="chevron-right" size="14"></i> Далі</button>
+                </div>
             </div>
 
             <div class="section">
@@ -747,6 +756,15 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="pagination" id="attributionsPagination"
+                    style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="changeAttributionsPage(-1)" id="btnAttrPrev" disabled><i
+                            data-lucide="chevron-left" size="14"></i> Назад</button>
+                    <span style="align-self: center; font-size: 14px; font-weight: 500; color: var(--text-muted);"
+                        id="attrPageInfo">Сторінка 1</span>
+                    <button class="btn btn-secondary" onclick="changeAttributionsPage(1)" id="btnAttrNext"><i
+                            data-lucide="chevron-right" size="14"></i> Далі</button>
                 </div>
             </div>
         </div>
@@ -840,13 +858,13 @@
             });
         }
 
-        function switchTab(tab) {
+        function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            document.getElementById(tab).style.display = 'block';
+            document.getElementById(tabId).style.display = 'block';
 
             // Update nav tabs
             document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-            if (tab === 'dashboard') {
+            if (tabId === 'dashboard') {
                 document.querySelector('.nav-tab:first-child').classList.add('active');
                 // Update URL to remove ?tab= parameter
                 history.replaceState(null, '', 'dashboard.html');
@@ -856,7 +874,7 @@
                 // Enable auto-refresh
                 document.getElementById('autoRefresh').checked = true;
                 toggleAutoRefresh();
-            } else if (tab === 'logs') {
+            } else if (tabId === 'logs') {
                 document.querySelector('.nav-tab:nth-child(2)').classList.add('active');
                 // Update URL
                 history.replaceState(null, '', 'dashboard.html?tab=logs');
@@ -965,31 +983,55 @@
             }
         }
 
+        let currentClickPage = 1;
+        let currentAttrPage = 1;
+
+        function changeClicksPage(dir) {
+            currentClickPage += dir;
+            if (currentClickPage < 1) currentClickPage = 1;
+            loadClicks();
+        }
+
+        function changeAttributionsPage(dir) {
+            currentAttrPage += dir;
+            if (currentAttrPage < 1) currentAttrPage = 1;
+            loadAttributions();
+        }
+
         async function loadClicks() {
             try {
-                const response = await fetch(`${API_BASE}/admin/clicks?limit=20`);
+                const response = await fetch(`${API_BASE}/admin/clicks?page=${currentClickPage}&limit=50`);
                 const data = await response.json();
 
                 const tbody = document.getElementById('clicksTable');
 
                 if (data.clicks && data.clicks.length > 0) {
-                    tbody.innerHTML = data.clicks.map(click => `
+                    tbody.innerHTML = data.clicks.map(click => {
+                        const clickIdStr = click.click_id || '-';
+                        const displayId = clickIdStr.length > 12 ? clickIdStr.substring(0, 12) + '...' : clickIdStr;
+                        return `
                         <tr>
                             <td class="timestamp">${new Date(click.created_at).toLocaleString('uk-UA')}</td>
-                            <td><code class="copyable" title="Натисніть щоб скопіювати: ${click.click_id}" onclick="copyVal('${click.click_id}', this)">${click.click_id.substring(0, 12)}...</code></td>
-                            <td><code class="copyable" title="Натисніть щоб скопіювати" onclick="copyVal('${click.ip_address}', this)">${click.ip_address}</code></td>
+                            <td><code class="copyable" title="Натисніть щоб скопіювати: ${clickIdStr}" onclick="copyVal('${clickIdStr}', this)">${displayId}</code></td>
+                            <td><code class="copyable" title="Натисніть щоб скопіювати" onclick="copyVal('${click.ip_address || ''}', this)">${click.ip_address || '-'}</code></td>
                             <td><span class="badge badge-info">${click.sub1 || '-'}</span></td>
                             <td>${click.sub2 || '-'}</td>
                             <td>${click.fbclid ? '<i data-lucide="check" size="14" style="color: var(--success)"></i> ' : '-'}</td>
                             <td>${click.fb_id ? '<i data-lucide="check" size="14" style="color: var(--success)"></i> ' : '-'}</td>
                             <td>
                                 ${click.attributed
-                            ? '<span class="badge badge-success"><i data-lucide="check-circle" size="12"></i> Attributed</span>'
-                            : '<span class="badge badge-warning"><i data-lucide="clock" size="12"></i> Pending</span>'}
+                                ? '<span class="badge badge-success"><i data-lucide="check-circle" size="12"></i> Attributed</span>'
+                                : '<span class="badge badge-warning"><i data-lucide="clock" size="12"></i> Pending</span>'}
                             </td>
                         </tr>
-                    `).join('');
+                        `;
+                    }).join('');
                     lucide.createIcons();
+
+                    // Update Pagination UI
+                    document.getElementById('clicksPageInfo').textContent = `Сторінка ${data.page} з ${data.totalPages}`;
+                    document.getElementById('btnClicksPrev').disabled = data.page <= 1;
+                    document.getElementById('btnClicksNext').disabled = data.page >= data.totalPages;
                 } else {
                     tbody.innerHTML = `
                         <tr>
@@ -1016,23 +1058,41 @@
 
         async function loadAttributions() {
             try {
-                const response = await fetch(`${API_BASE}/admin/attributions?limit=20`);
+                const response = await fetch(`${API_BASE}/admin/attributions?page=${currentAttrPage}&limit=50`);
                 const data = await response.json();
-
                 const tbody = document.getElementById('attributionsTable');
 
                 if (data.attributions && data.attributions.length > 0) {
-                    tbody.innerHTML = data.attributions.map(attr => `
+                    tbody.innerHTML = data.attributions.map(attr => {
+                        const clickIdStr = attr.click_id || '-';
+                        const displayId = clickIdStr.length > 12 ? clickIdStr.substring(0, 12) + '...' : clickIdStr;
+                        const deviceModel = attr.device_model || 'Unknown';
+                        const osVer = attr.os_version || '?';
+                        const ipAddr = attr.ip_address || '?';
+
+                        return `
                         <tr>
                             <td class="timestamp">${new Date(attr.created_at).toLocaleString('uk-UA')}</td>
-                            <td><code class="copyable" title="Натисніть щоб скопіювати: ${attr.os_user_key}" onclick="copyVal('${attr.os_user_key}', this)">${attr.os_user_key.substring(0, 16)}...</code></td>
-                            <td>${attr.click_id ? `<code class="copyable" title="Натисніть щоб скопіювати: ${attr.click_id}" onclick="copyVal('${attr.click_id}', this)">${attr.click_id.substring(0, 12)}...</code>` : '<span class="badge badge-info"><i data-lucide="leaf" size="12"></i> Organic</span>'}</td>
-                            <td><span class="badge badge-secondary">${attr.push_sub || '-'}</span></td>
-                            <td><code class="copyable url-preview" title="Натисніть щоб скопіювати: ${attr.final_url || ''}" onclick="copyVal('${(attr.final_url || '').replace(/'/g, "\\'")}', this)">${attr.final_url ? attr.final_url.substring(0, 30) + '...' : '-'}</code></td>
-                            <td><code class="copyable" title="Натисніть щоб скопіювати: ${attr.idfv}" onclick="copyVal('${attr.idfv}', this)">${attr.idfv.substring(0, 12)}...</code></td>
+                            <td>
+                                <div><strong>${deviceModel}</strong> (iOS ${osVer})</div>
+                                <div style="color: var(--text-muted); font-size: 12px;">IP: ${ipAddr}</div>
+                            </td>
+                            <td><code class="copyable" title="Натисніть щоб скопіювати" onclick="copyVal('${clickIdStr}', this)">${displayId}</code></td>
+                            <td><span class="badge badge-secondary">${attr.push_sub || 'organic'}</span></td>
+                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                ${attr.final_url ? `<a href="${attr.final_url}" target="_blank" title="${attr.final_url}">${attr.final_url.substring(0, 30)}...</a>` : '-'}
+                            </td>
+                            <td><code style="font-size: 11px;">${attr.idfv ? attr.idfv.substring(0, 8) + '...' : '-'}</code></td>
                         </tr>
-                    `).join('');
+                        `;
+                    }).join('');
                     lucide.createIcons();
+
+                    // Update Pagination UI
+                    document.getElementById('attrPageInfo').textContent = `Сторінка ${data.page} з ${data.totalPages}`;
+                    document.getElementById('btnAttrPrev').disabled = data.page <= 1;
+                    document.getElementById('btnAttrNext').disabled = data.page >= data.totalPages;
+
                 } else {
                     tbody.innerHTML = `
                         <tr>

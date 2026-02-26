@@ -22,7 +22,8 @@ export class AppsFlyerEventsService {
         appsflyerId: string,
         idfv: string,
         eventName: string,
-        eventValue?: Record<string, any>
+        eventValue?: Record<string, any>,
+        clickId?: string
     ): Promise<void> {
         const url = `${this.baseUrl}/${this.appId}`;
 
@@ -49,6 +50,16 @@ export class AppsFlyerEventsService {
                 status: response.status
             });
 
+            // Log successful outbound postback to AppsFlyer
+            eventLogger.log('postback', `AppsFlyer Outbound: ${eventName}`, {
+                click_id: clickId || appsflyerId, // Use clickId or appsflyerId
+                url,
+                method: 'POST',
+                payload,
+                response_status: response.status,
+                response_body: response.data
+            });
+
         } catch (error: any) {
             console.error('❌ AppsFlyer S2S error:', {
                 eventName,
@@ -57,6 +68,16 @@ export class AppsFlyerEventsService {
             eventLogger.log('error', `AppsFlyer S2S Error: ${eventName}`, {
                 appsflyer_id: appsflyerId,
                 error: error.response?.data || error.message
+            });
+
+            // Log failed outbound postback to AppsFlyer
+            eventLogger.log('postback', `AppsFlyer Outbound Failed: ${eventName}`, {
+                click_id: clickId || appsflyerId,
+                url,
+                method: 'POST',
+                payload,
+                response_status: error.response?.status || 500,
+                response_body: error.response?.data || error.message
             });
             throw new Error(`AppsFlyer API error: ${error.message}`);
         }
