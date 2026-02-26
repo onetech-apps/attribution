@@ -598,9 +598,9 @@
         .tool-tab {
             padding: 8px 14px;
             border-radius: 8px;
-            background: transparent;
-            border: 1px solid transparent;
             cursor: pointer;
+            border: 1px solid transparent;
+            background: transparent;
             font-size: 13px;
             font-weight: 600;
             color: var(--text-muted);
@@ -608,6 +608,20 @@
             align-items: center;
             gap: 6px;
             transition: all 0.2s;
+        }
+
+        @keyframes spinAround {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .icon-spinning {
+            animation: spinAround 1s linear infinite;
         }
 
         .tool-tab:hover {
@@ -700,7 +714,8 @@
                         <span style="font-weight: 500;">Live Updates</span>
                     </div>
                     <div style="flex-grow: 1;"></div>
-                    <button class="btn" onclick="loadData()"><i data-lucide="refresh-cw" size="16"></i> Оновити</button>
+                    <button class="btn" onclick="loadData(this)"><i data-lucide="refresh-cw" size="16"></i>
+                        Оновити</button>
                 </div>
 
                 <h2><i data-lucide="mouse-pointer-click" size="20"></i> Останні кліки</h2>
@@ -1065,24 +1080,14 @@
                 if (data.attributions && data.attributions.length > 0) {
                     tbody.innerHTML = data.attributions.map(attr => {
                         const clickIdStr = attr.click_id || '-';
-                        const displayId = clickIdStr.length > 12 ? clickIdStr.substring(0, 12) + '...' : clickIdStr;
-                        const deviceModel = attr.device_model || 'Unknown';
-                        const osVer = attr.os_version || '?';
-                        const ipAddr = attr.ip_address || '?';
-
                         return `
                         <tr>
                             <td class="timestamp">${new Date(attr.created_at).toLocaleString('uk-UA')}</td>
-                            <td>
-                                <div><strong>${deviceModel}</strong> (iOS ${osVer})</div>
-                                <div style="color: var(--text-muted); font-size: 12px;">IP: ${ipAddr}</div>
-                            </td>
-                            <td><code class="copyable" title="Натисніть щоб скопіювати" onclick="copyVal('${clickIdStr}', this)">${displayId}</code></td>
-                            <td><span class="badge badge-secondary">${attr.push_sub || 'organic'}</span></td>
-                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                ${attr.final_url ? `<a href="${attr.final_url}" target="_blank" title="${attr.final_url}">${attr.final_url.substring(0, 30)}...</a>` : '-'}
-                            </td>
-                            <td><code style="font-size: 11px;">${attr.idfv ? attr.idfv.substring(0, 8) + '...' : '-'}</code></td>
+                            <td>${attr.os_user_key ? `<code class="copyable" title="Натисніть щоб скопіювати: ${attr.os_user_key}" onclick="copyVal('${attr.os_user_key}', this)">${attr.os_user_key.substring(0, 16)}...</code>` : '-'}</td>
+                            <td>${attr.click_id ? `<code class="copyable" title="Натисніть щоб скопіювати: ${attr.click_id}" onclick="copyVal('${attr.click_id}', this)">${attr.click_id.substring(0, 12)}...</code>` : '<span class="badge badge-info"><i data-lucide="leaf" size="12"></i> Organic</span>'}</td>
+                            <td><span class="badge badge-secondary">${attr.push_sub || '-'}</span></td>
+                            <td><code class="copyable url-preview" title="Натисніть щоб скопіювати: ${attr.final_url || ''}" onclick="copyVal('${(attr.final_url || '').replace(/'/g, "\\'")}', this)">${attr.final_url ? attr.final_url.substring(0, 30) + '...' : '-'}</code></td>
+                            <td>${attr.idfv ? `<code class="copyable" title="Натисніть щоб скопіювати: ${attr.idfv}" onclick="copyVal('${attr.idfv}', this)">${attr.idfv.substring(0, 12)}...</code>` : '-'}</td>
                         </tr>
                         `;
                     }).join('');
@@ -1172,7 +1177,14 @@
             }
         }
 
-        async function loadData() {
+        async function loadData(btnElement = null) {
+            let icon = null;
+            if (btnElement) {
+                icon = btnElement.querySelector('i');
+                if (icon) icon.classList.add('icon-spinning');
+                btnElement.disabled = true;
+            }
+
             await Promise.all([
                 loadStats(),
                 loadClicks(),
@@ -1180,6 +1192,11 @@
             ]);
             // Events load independently to be faster
             lucide.createIcons();
+
+            if (btnElement) {
+                if (icon) icon.classList.remove('icon-spinning');
+                btnElement.disabled = false;
+            }
         }
 
         function toggleAutoRefresh() {
