@@ -39,6 +39,10 @@ export class FacebookConversionApi {
                 client_user_agent: params.userAgent,
                 fbc: `fb.1.${Date.now()}.${params.fbclid}`, // Facebook click ID
             },
+            app_data: {
+                application_tracking_enabled: 1,
+                advertiser_tracking_enabled: 1
+            },
         };
 
         // Add revenue data for PURCHASE events (required for ROAS optimization)
