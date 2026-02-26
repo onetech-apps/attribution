@@ -4,7 +4,9 @@ import { generateClickId } from '../utils/helpers';
 import { TenantRequest } from '../middleware/tenantMiddleware';
 import { eventLogger } from '../utils/eventLogger';
 
-
+// Very basic in-memory debounce cache to prevent rapid double-clicks from same IP
+const clickDebounceCache = new Map<string, number>();
+const CLICK_DEBOUNCE_MS = 2000; // 2 seconds
 export class ClickController {
     /**
      * Track advertising click
@@ -23,6 +25,19 @@ export class ClickController {
             const clickId = generateClickId();
             const ipAddress = req.ip || req.connection.remoteAddress || '';
             const userAgent = req.headers['user-agent'] || '';
+
+            // Debounce check: Prevent duplicate clicks from the same IP within 2 seconds
+            const now = Date.now();
+            const lastClickTime = clickDebounceCache.get(ipAddress);
+            if (lastClickTime && (now - lastClickTime) < CLICK_DEBOUNCE_MS) {
+                console.log(`⏳ Ignored duplicate click from ${ipAddress} (too fast)`);
+                // Still redirect the user so their experience isn't broken
+                const appStoreUrl = tenant?.app_store_url || process.env.APP_STORE_URL || 'https://apps.apple.com';
+                res.redirect(302, appStoreUrl);
+                return;
+            }
+            // Update cache
+            clickDebounceCache.set(ipAddress, now);
 
             // Save click to database with app_id
             await query(
