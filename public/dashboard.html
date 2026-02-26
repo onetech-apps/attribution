@@ -727,8 +727,7 @@
                                 <th>Click ID</th>
                                 <th>IP</th>
                                 <th>Campaign</th>
-                                <th>Device / OS</th>
-                                <th>FB Click ID</th>
+                                <th style="white-space: nowrap;">FB Click ID</th>
                                 <th>Pixel</th>
                                 <th>Статус</th>
                             </tr>
@@ -1028,13 +1027,9 @@
                         <tr>
                             <td class="timestamp">${new Date(click.created_at).toLocaleString('uk-UA')}</td>
                             <td><code class="copyable" title="Натисніть щоб скопіювати: ${clickIdStr}" onclick="copyVal('${clickIdStr}', this)">${displayId}</code></td>
-                            <td><code class="copyable" title="Натисніть щоб скопіювати" onclick="copyVal('${click.ip_address || ''}', this)">${click.ip_address || '-'}</code></td>
+                            <td><code class="copyable" style="max-width: 120px; display: inline-block; overflow: hidden; text-overflow: ellipsis;" title="Натисніть щоб скопіювати" onclick="copyVal('${click.ip_address || ''}', this)">${click.ip_address || '-'}</code></td>
                             <td><span class="badge badge-info">${click.sub1 || '-'}</span></td>
-                            <td>
-                                <div style="font-size: 13px; font-weight: 500;">${click.device_model || 'Unknown Device'}</div>
-                                <div style="font-size: 11px; color: var(--text-muted);">${click.os_version ? `iOS ${click.os_version}` : click.browser || 'Unknown OS'}</div>
-                            </td>
-                            <td>${click.fbclid ? '<i data-lucide="check" size="14" style="color: var(--success)"></i> ' : '-'}</td>
+                            <td>${click.fbclid ? `<code class="copyable" style="max-width: 120px; text-overflow: ellipsis; overflow: hidden; display: inline-block; white-space: nowrap; vertical-align: middle;" title="Натисніть щоб скопіювати" onclick="copyVal('${click.fbclid}', this)">${click.fbclid}</code>` : '-'}</td>
                             <td>${click.fb_id ? '<i data-lucide="check" size="14" style="color: var(--success)"></i> ' : '-'}</td>
                             <td>
                                 ${click.attributed
@@ -1184,10 +1179,8 @@
         }
 
         async function loadData(btnElement = null) {
-            let svgIcon = null;
             if (btnElement) {
-                // Find inner svg directly (Lucide replaces <i> with <svg>)
-                svgIcon = btnElement.querySelector('svg');
+                const svgIcon = btnElement.querySelector('svg');
                 if (svgIcon) svgIcon.classList.add('icon-spinning');
                 btnElement.disabled = true;
             }
@@ -1201,7 +1194,9 @@
             lucide.createIcons();
 
             if (btnElement) {
-                if (svgIcon) svgIcon.classList.remove('icon-spinning');
+                // Re-select because lucide.createIcons() replaces the SVG element
+                const newSvgIcon = btnElement.querySelector('svg');
+                if (newSvgIcon) newSvgIcon.classList.remove('icon-spinning');
                 btnElement.disabled = false;
             }
         }
