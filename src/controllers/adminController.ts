@@ -15,17 +15,39 @@ export class AdminController {
         try {
             const limit = parseInt(req.query.limit as string) || 20;
             const page = parseInt(req.query.page as string) || 1;
+            const search = req.query.search as string;
+            const hasAttribution = req.query.hasAttribution as string;
             const offset = (page - 1) * limit;
 
-            const countResult = await query('SELECT COUNT(*) FROM clicks');
+            let countQuery = 'SELECT COUNT(*) FROM clicks c';
+            let dataQuery = 'SELECT c.* FROM clicks c';
+            const queryParams: any[] = [];
+            let whereClauses: string[] = [];
+
+            if (search) {
+                queryParams.push(`%${search}%`);
+                whereClauses.push(`(c.click_id ILIKE $${queryParams.length} OR c.fbclid ILIKE $${queryParams.length})`);
+            }
+
+            if (hasAttribution === 'true') {
+                // If we need to filter clicks that have attributions, we can join or use EXISTS
+                whereClauses.push(`EXISTS (SELECT 1 FROM attributions a WHERE a.click_id = c.click_id)`);
+            } else if (hasAttribution === 'false') {
+                whereClauses.push(`NOT EXISTS (SELECT 1 FROM attributions a WHERE a.click_id = c.click_id)`);
+            }
+
+            if (whereClauses.length > 0) {
+                const whereString = ' WHERE ' + whereClauses.join(' AND ');
+                countQuery += whereString;
+                dataQuery += whereString;
+            }
+
+            dataQuery += ` ORDER BY c.created_at DESC LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
+
+            const countResult = await query(countQuery, queryParams);
             const totalCount = parseInt(countResult.rows[0].count);
 
-            const result = await query(
-                `SELECT * FROM clicks 
-                 ORDER BY created_at DESC 
-                 LIMIT $1 OFFSET $2`,
-                [limit, offset]
-            );
+            const result = await query(dataQuery, [...queryParams, limit, offset]);
 
             res.json({
                 clicks: result.rows,
@@ -48,17 +70,31 @@ export class AdminController {
         try {
             const limit = parseInt(req.query.limit as string) || 20;
             const page = parseInt(req.query.page as string) || 1;
+            const search = req.query.search as string;
             const offset = (page - 1) * limit;
 
-            const countResult = await query('SELECT COUNT(*) FROM attributions');
+            let countQuery = 'SELECT COUNT(*) FROM attributions';
+            let dataQuery = 'SELECT * FROM attributions';
+            const queryParams: any[] = [];
+            let whereClauses: string[] = [];
+
+            if (search) {
+                queryParams.push(`%${search}%`);
+                whereClauses.push(`click_id ILIKE $${queryParams.length}`);
+            }
+
+            if (whereClauses.length > 0) {
+                const whereString = ' WHERE ' + whereClauses.join(' AND ');
+                countQuery += whereString;
+                dataQuery += whereString;
+            }
+
+            dataQuery += ` ORDER BY created_at DESC LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
+
+            const countResult = await query(countQuery, queryParams);
             const totalCount = parseInt(countResult.rows[0].count);
 
-            const result = await query(
-                `SELECT * FROM attributions 
-                 ORDER BY created_at DESC 
-                 LIMIT $1 OFFSET $2`,
-                [limit, offset]
-            );
+            const result = await query(dataQuery, [...queryParams, limit, offset]);
 
             res.json({
                 attributions: result.rows,
@@ -340,6 +376,77 @@ export class AdminController {
         } catch (error) {
             console.error('Error getting postback logs:', error);
             res.status(500).json({ error: 'Failed to get postback logs' });
+        }
+    }
+
+    /**
+     * Resend a failed postback
+     * POST /api/v1/admin/logs/postbacks/:id/resend
+     */
+    async resendPostback(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const logResult = await query('SELECT * FROM postback_logs WHERE id = $1', [id]);
+
+            if (logResult.rows.length === 0) {
+                res.status(404).json({ error: 'Log entry not found' });
+                return;
+            }
+
+            const log = logResult.rows[0];
+
+            // Re-send logic
+            console.log(`🔄 Resending postback ID ${id} to ${log.url}`);
+
+            try {
+                let axiosResponse;
+                if (log.method === 'POST') {
+                    // For Facebook CAPI / Appsflyer S2S
+                    const payload = typeof log.payload === 'string' ? JSON.parse(log.payload) : log.payload;
+                    axiosResponse = await axios.post(log.url, payload, { timeout: 10000 });
+                } else {
+                    // For Keitaro incoming simulation or standard GET
+                    const urlParams = new URLSearchParams(log.payload).toString();
+                    const fullUrl = log.url.includes('?')
+                        ? (urlParams ? `${log.url}&${urlParams}` : log.url)
+                        : (urlParams ? `${log.url}?${urlParams}` : log.url);
+
+                    axiosResponse = await axios.get(fullUrl, { timeout: 10000 });
+                }
+
+                // If success, we update the existing log entry or let eventLogger create a new one. 
+                // Creating a new one and deleting the old one is cleaner.
+                await query('DELETE FROM postback_logs WHERE id = $1', [id]);
+
+                res.json({
+                    success: true,
+                    message: 'Postback re-sent successfully',
+                    response_status: axiosResponse.status,
+                    response_body: axiosResponse.data
+                });
+
+            } catch (err: any) {
+                console.error(`❌ Resend failed for ID ${id}:`, err.message);
+
+                // Update the log entry with the new error to reflect the latest attempt
+                const newStatus = err.response?.status || 500;
+                const newBody = err.response?.data || err.message;
+
+                await query(
+                    'UPDATE postback_logs SET response_status = $1, response_body = $2, created_at = CURRENT_TIMESTAMP WHERE id = $3',
+                    [newStatus, JSON.stringify(newBody), id]
+                );
+
+                res.status(500).json({
+                    error: 'Failed to resend postback',
+                    details: err.response?.data || err.message,
+                    status: newStatus
+                });
+            }
+
+        } catch (error) {
+            console.error('Error resending postback:', error);
+            res.status(500).json({ error: 'Server error while resending postback' });
         }
     }
 

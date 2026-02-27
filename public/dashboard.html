@@ -718,7 +718,20 @@
                         Оновити</button>
                 </div>
 
-                <h2><i data-lucide="mouse-pointer-click" size="20"></i> Останні кліки</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0;"><i data-lucide="mouse-pointer-click" size="20"></i> Останні кліки</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="clickSearch" placeholder="Пошук по Click ID або FBCLID"
+                            class="form-control" style="width: 280px; padding: 6px 10px;"
+                            oninput="debounceSearch(loadClicks)">
+                        <select id="clickAttrFilter" class="form-select" style="padding: 6px 10px;"
+                            onchange="currentClickPage = 1; loadClicks()">
+                            <option value="">Всі кліки</option>
+                            <option value="true">Лише з атрибуцією</option>
+                            <option value="false">Без атрибуції</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -751,7 +764,13 @@
             </div>
 
             <div class="section">
-                <h2><i data-lucide="target" size="20"></i> Останні атрибуції</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0;"><i data-lucide="target" size="20"></i> Останні атрибуції</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="attrSearch" placeholder="Пошук по Click ID" class="form-control"
+                            style="width: 250px; padding: 6px 10px;" oninput="debounceSearch(loadAttributions)">
+                    </div>
+                </div>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -800,18 +819,18 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Час</th>
-                                <th>Click ID</th>
-                                <th>Метод</th>
-                                <th>Статус</th>
-                                <th>Дані</th>
-                                <th>Відповідь</th>
+                            <th>Час</th>
+                            <th>Click ID</th>
+                            <th>Метод</th>
+                            <th>Статус</th>
+                            <th>Дані</th>
+                            <th>Відповідь</th>
+                            <th>Дії</th>
                             </tr>
                         </thead>
                         <tbody id="postbackLogsBody">
                             <tr>
-                                <td colspan="6" style="text-align: center;">Завантаження...</td>
+                                <td colspan="7" style="text-align: center;">Завантаження...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -926,7 +945,7 @@
                 const tbody = document.getElementById(type === 'postbacks' ? 'postbackLogsBody' : 'errorLogsBody');
 
                 if (!data.logs || data.logs.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Логів не знайдено</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="${type === 'postbacks' ? '7' : '6'}" style="text-align: center; color: var(--text-muted);">Логів не знайдено</td></tr>`;
                     return;
                 }
 
@@ -942,6 +961,11 @@
                             </td>
                             <td>
                                 <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px;" onclick='showJson(${JSON.stringify(JSON.parse(log.response_body || "{}"))})'>Огляд</button>
+                            </td>
+                            <td>
+                                ${log.response_status < 200 || log.response_status >= 300
+                            ? `<button class="btn btn-primary" style="padding: 2px 6px; font-size: 10px;" onclick="resendLog(${log.id})"><i data-lucide="refresh-cw" size="10"></i> Перевідправити</button>`
+                            : ''}
                             </td>
                         </tr>
                     `).join('');
@@ -960,6 +984,29 @@
                 lucide.createIcons();
             } catch (error) {
                 console.error(`Error loading ${type} logs:`, error);
+            }
+        }
+
+        async function resendLog(id) {
+            if (!confirm('Бажаєте спробувати відправити цей постбек ще раз?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/logs/postbacks/${id}/resend`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('✅ Постбек успішно доставлено!');
+                } else {
+                    alert(`❌ Помилка відправки: ${result.details?.message || result.error || 'Невідома помилка'}`);
+                }
+
+                // Refresh logs table
+                loadLogs('postbacks');
+            } catch (error) {
+                alert('Сталася мережева помилка при відправці');
+                console.error(error);
             }
         }
 
@@ -997,6 +1044,16 @@
             }
         }
 
+        let searchTimeout;
+        function debounceSearch(callback) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (callback === loadClicks) currentClickPage = 1;
+                if (callback === loadAttributions) currentAttrPage = 1;
+                callback();
+            }, 500);
+        }
+
         let currentClickPage = 1;
         let currentAttrPage = 1;
 
@@ -1014,7 +1071,13 @@
 
         async function loadClicks() {
             try {
-                const response = await fetch(`${API_BASE}/admin/clicks?page=${currentClickPage}&limit=50`);
+                const search = document.getElementById('clickSearch').value;
+                const filter = document.getElementById('clickAttrFilter').value;
+                let url = `${API_BASE}/admin/clicks?page=${currentClickPage}&limit=50`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (filter) url += `&hasAttribution=${filter}`;
+
+                const response = await fetch(url);
                 const data = await response.json();
 
                 const tbody = document.getElementById('clicksTable');
@@ -1071,7 +1134,11 @@
 
         async function loadAttributions() {
             try {
-                const response = await fetch(`${API_BASE}/admin/attributions?page=${currentAttrPage}&limit=50`);
+                const search = document.getElementById('attrSearch')?.value || '';
+                let url = `${API_BASE}/admin/attributions?page=${currentAttrPage}&limit=50`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+
+                const response = await fetch(url);
                 const data = await response.json();
                 const tbody = document.getElementById('attributionsTable');
 

@@ -49,6 +49,7 @@ router.get('/admin/health-details', adminController.getHealthDetails.bind(adminC
  * Log Management
  */
 router.get('/admin/logs/postbacks', adminController.getPostbackLogs.bind(adminController));
+router.post('/admin/logs/postbacks/:id/resend', adminController.resendPostback.bind(adminController));
 router.delete('/admin/logs/postbacks', adminController.clearPostbackLogs.bind(adminController));
 router.get('/admin/logs/errors', adminController.getErrorLogs.bind(adminController));
 router.delete('/admin/logs/errors', adminController.clearErrorLogs.bind(adminController));
