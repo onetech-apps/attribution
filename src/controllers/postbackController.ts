@@ -27,7 +27,10 @@ export class PostbackController {
 
             // Find click by click_id (subid = external_id = click_id)
             const clickResult = await query(
-                'SELECT * FROM clicks WHERE click_id = $1',
+                `SELECT c.*, a.domain as app_domain 
+                 FROM clicks c 
+                 LEFT JOIN apps a ON c.app_id = a.app_id 
+                 WHERE c.click_id = $1`,
                 [subid]
             );
 
@@ -89,7 +92,8 @@ export class PostbackController {
                 fbclid: click.fbclid,
                 ip: click.ip_address,
                 userAgent: click.user_agent,
-                clickId: click.click_id
+                clickId: click.click_id,
+                domain: click.app_domain || click.app_id
             };
 
             let eventName: string;

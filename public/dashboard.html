@@ -863,8 +863,13 @@
             <div id="logs-postbacks" class="log-section active">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3>Логи Постбеків</h3>
-                    <button class="btn btn-danger btn-sm" onclick="clearLogs('postbacks')"><i data-lucide="trash-2"></i>
-                        Очистити</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-sm" onclick="showBulkResendModal()"><i data-lucide="send"></i>
+                            Масова відправка FB</button>
+                        <button class="btn btn-danger btn-sm" onclick="clearLogs('postbacks')"><i
+                                data-lucide="trash-2"></i>
+                            Очистити</button>
+                    </div>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;">
                     <input type="text" id="logsSearch" placeholder="Пошук по Click ID..."
@@ -943,6 +948,52 @@
             <div class="form-actions">
                 <button class="btn btn-secondary"
                     onclick="document.getElementById('jsonModal').classList.remove('active')">Закрити</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Bulk FB Resend -->
+    <div id="bulkResendModal" class="modal">
+        <div class="modal-content">
+            <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="send" size="18"></i> Масова
+                відправка подій у Facebook</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">
+                Відправляє Facebook CAPI події для всіх атрибутованих кліків з таблиці <code>clicks</code>.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Від
+                            дати</label>
+                        <input type="date" id="bulkDateFrom"
+                            style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">До
+                            дати</label>
+                        <input type="date" id="bulkDateTo"
+                            style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;">
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight: 500; display: block; margin-bottom: 4px;">Тип
+                        події</label>
+                    <select id="bulkEventName"
+                        style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;">
+                        <option value="COMPLETE_REGISTRATION">COMPLETE_REGISTRATION (реєстрація)</option>
+                        <option value="APP_INSTALL">APP_INSTALL (інстал)</option>
+                        <option value="PURCHASE">PURCHASE (покупка)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="bulkResendResult"
+                style="display: none; margin-top: 15px; padding: 12px; border-radius: 8px; font-size: 13px; max-height: 200px; overflow-y: auto;">
+            </div>
+            <div class="form-actions" style="margin-top: 15px;">
+                <button class="btn btn-secondary btn-sm"
+                    onclick="document.getElementById('bulkResendModal').classList.remove('active')">Закрити</button>
+                <button class="btn btn-sm" id="btnRunBulkResend" onclick="runBulkResend()"><i data-lucide="play"></i>
+                    Запустити</button>
             </div>
         </div>
     </div>
@@ -1104,7 +1155,8 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    alert('✅ Постбек успішно доставлено!');
+                    const evInfo = result.events_received !== undefined ? ` (FB прийняв: ${result.events_received} подій)` : '';
+                    alert(`✅ ${result.message || 'Постбек успішно доставлено'}${evInfo}`);
                 } else {
                     const errorMsg = result.response_body?.error?.message || result.details?.message || result.error || 'Невідома помилка';
                     alert(`❌ Помилка відправки (Статус ${result.response_status || response.status}):\n${errorMsg}`);
@@ -1116,6 +1168,70 @@
                 alert('Сталася мережева помилка при відправці');
                 console.error(error);
             }
+        }
+
+        function showBulkResendModal() {
+            document.getElementById('bulkResendResult').style.display = 'none';
+            document.getElementById('btnRunBulkResend').disabled = false;
+            document.getElementById('bulkResendModal').classList.add('active');
+            lucide.createIcons();
+        }
+
+        async function runBulkResend() {
+            const dateFrom = document.getElementById('bulkDateFrom').value || undefined;
+            const dateTo = document.getElementById('bulkDateTo').value || undefined;
+            const eventName = document.getElementById('bulkEventName').value;
+
+            if (!confirm(`Запустити масову відправку "${eventName}" у Facebook?\n\nЦе відправить події для ВСІХ атрибутованих кліків${dateFrom ? ' від ' + dateFrom : ''}${dateTo ? ' до ' + dateTo : ''}.`)) return;
+
+            const btn = document.getElementById('btnRunBulkResend');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader"></i> Відправка...';
+            lucide.createIcons();
+
+            const resultDiv = document.getElementById('bulkResendResult');
+            resultDiv.style.display = 'block';
+            resultDiv.style.background = '#f8fafc';
+            resultDiv.innerHTML = '⏳ Відправка в процесі... Це може зайняти кілька хвилин.';
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/bulk-resend-fb`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dateFrom, dateTo, eventName })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const failedItems = result.results.filter(r => r.status !== 'ok');
+                    resultDiv.style.background = result.failed > 0 ? '#fffbeb' : '#ecfdf5';
+                    resultDiv.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 8px;">${result.message}</div>
+                        <div>📊 Всього кліків: ${result.total}</div>
+                        <div>✅ Успішно: ${result.sent}</div>
+                        <div>❌ Помилки: ${result.failed}</div>
+                        ${failedItems.length > 0 ? `
+                            <details style="margin-top: 8px;">
+                                <summary style="cursor: pointer; color: #dc2626;">Показати помилки (${failedItems.length})</summary>
+                                <div style="margin-top: 5px; font-family: monospace; font-size: 11px;">
+                                    ${failedItems.map(f => `<div>${f.click_id}: ${f.error || 'rejected'}</div>`).join('')}
+                                </div>
+                            </details>
+                        ` : ''}
+                    `;
+                } else {
+                    resultDiv.style.background = '#fef2f2';
+                    resultDiv.innerHTML = `❌ Помилка: ${result.error}`;
+                }
+            } catch (error) {
+                resultDiv.style.background = '#fef2f2';
+                resultDiv.innerHTML = `❌ Мережева помилка: ${error.message}`;
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="play"></i> Запустити';
+            lucide.createIcons();
+            loadLogs('postbacks');
         }
 
         async function clearLogs(type) {

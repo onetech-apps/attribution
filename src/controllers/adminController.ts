@@ -463,7 +463,13 @@ export class AdminController {
                     if (postUrl.includes('graph.facebook.com')) {
                         let rebuilt = false;
                         if (log.click_id) {
-                            const clickRes = await query('SELECT * FROM clicks WHERE click_id = $1', [log.click_id]);
+                            const clickRes = await query(
+                                `SELECT c.*, a.domain as app_domain 
+                                 FROM clicks c 
+                                 LEFT JOIN apps a ON c.app_id = a.app_id 
+                                 WHERE c.click_id = $1`,
+                                [log.click_id]
+                            );
                             if (clickRes.rows.length > 0) {
                                 const click = clickRes.rows[0];
                                 if (click.fb_token && click.fb_id) {
@@ -473,16 +479,22 @@ export class AdminController {
                                         eventName = payload.data[0].event_name;
                                     }
 
+                                    const appDomain = click.app_domain || click.app_id || 'oneapps.info';
+
                                     payload = {
                                         data: [{
                                             event_name: eventName,
                                             event_time: Math.floor(Date.now() / 1000), // current retry time
                                             action_source: 'website',
-                                            event_source_url: 'https://' + (process.env.DOMAIN || 'oneapps.info'),
+                                            event_source_url: `https://${appDomain}`,
                                             user_data: {
                                                 client_ip_address: click.ip_address,
                                                 client_user_agent: click.user_agent,
                                                 fbc: click.fbclid ? `fb.1.${Date.now()}.${click.fbclid}` : undefined
+                                            },
+                                            app_data: {
+                                                application_tracking_enabled: 1,
+                                                advertiser_tracking_enabled: 1
                                             }
                                         }],
                                         access_token: click.fb_token
@@ -537,11 +549,22 @@ export class AdminController {
                     );
                 }
 
+                // Check if Facebook actually accepted the events
+                const eventsReceived = axiosResponse.data?.events_received;
+                const fbMessages = axiosResponse.data?.messages;
+                const fbReallyWorked = isSuccess && (eventsReceived === undefined || eventsReceived > 0);
+
                 res.json({
                     success: isSuccess,
-                    message: isSuccess ? 'Postback re-sent successfully' : 'Postback rejected by destination',
+                    message: isSuccess
+                        ? (eventsReceived !== undefined
+                            ? `Постбек відправлено. Facebook прийняв: ${eventsReceived} подій`
+                            : 'Постбек успішно відправлено')
+                        : 'Постбек відхилено сервером',
                     response_status: axiosResponse.status,
-                    response_body: axiosResponse.data
+                    response_body: axiosResponse.data,
+                    events_received: eventsReceived,
+                    fb_messages: fbMessages
                 });
 
             } catch (err: any) {
@@ -566,6 +589,133 @@ export class AdminController {
         } catch (error) {
             console.error('Error resending postback:', error);
             res.status(500).json({ error: 'Server error while resending postback' });
+        }
+    }
+
+    /**
+     * Bulk resend Facebook events from clicks table
+     * POST /api/v1/admin/bulk-resend-fb
+     * Queries clicks that have fb_id + fb_token + attributed=true
+     * and sends fresh events to Facebook CAPI
+     */
+    async bulkResendFacebook(req: Request, res: Response): Promise<void> {
+        try {
+            const { dateFrom, dateTo, eventName } = req.body;
+            const fbEventName = eventName || 'COMPLETE_REGISTRATION';
+
+            // Build query to find attributed clicks with FB credentials
+            let dateFilter = '';
+            const params: any[] = [];
+
+            if (dateFrom) {
+                params.push(dateFrom);
+                dateFilter += ` AND c.created_at >= $${params.length}`;
+            }
+            if (dateTo) {
+                params.push(dateTo);
+                dateFilter += ` AND c.created_at <= $${params.length}`;
+            }
+
+            const clicksResult = await query(
+                `SELECT c.*, a.domain as app_domain 
+                 FROM clicks c 
+                 LEFT JOIN apps a ON c.app_id = a.app_id 
+                 WHERE c.attributed = true 
+                   AND c.fb_id IS NOT NULL AND c.fb_id != ''
+                   AND c.fb_token IS NOT NULL AND c.fb_token != ''
+                   ${dateFilter}
+                 ORDER BY c.created_at DESC`,
+                params
+            );
+
+            if (clicksResult.rows.length === 0) {
+                res.json({
+                    success: true,
+                    message: 'Не знайдено кліків для перевідправки',
+                    total: 0,
+                    sent: 0,
+                    failed: 0,
+                    results: []
+                });
+                return;
+            }
+
+            console.log(`📦 Bulk FB resend: found ${clicksResult.rows.length} clicks to process`);
+
+            const results: Array<{ click_id: string, status: string, events_received?: number, error?: string }> = [];
+            let sent = 0;
+            let failed = 0;
+
+            for (const click of clicksResult.rows) {
+                try {
+                    const appDomain = click.app_domain || click.app_id || 'oneapps.info';
+                    const payload = {
+                        data: [{
+                            event_name: fbEventName,
+                            event_time: Math.floor(Date.now() / 1000),
+                            action_source: 'website',
+                            event_source_url: `https://${appDomain}`,
+                            user_data: {
+                                client_ip_address: click.ip_address,
+                                client_user_agent: click.user_agent,
+                                fbc: click.fbclid ? `fb.1.${Date.now()}.${click.fbclid}` : undefined
+                            },
+                            app_data: {
+                                application_tracking_enabled: 1,
+                                advertiser_tracking_enabled: 1
+                            }
+                        }],
+                        access_token: click.fb_token
+                    };
+
+                    const postUrl = `https://graph.facebook.com/v18.0/${click.fb_id}/events?access_token=${click.fb_token}`;
+
+                    const axiosResponse = await axios.post(postUrl, payload, {
+                        timeout: 10000,
+                        validateStatus: () => true
+                    });
+
+                    const eventsReceived = axiosResponse.data?.events_received || 0;
+
+                    if (axiosResponse.status >= 200 && axiosResponse.status < 300 && eventsReceived > 0) {
+                        sent++;
+                        results.push({ click_id: click.click_id, status: 'ok', events_received: eventsReceived });
+                    } else {
+                        failed++;
+                        results.push({
+                            click_id: click.click_id,
+                            status: 'rejected',
+                            events_received: eventsReceived,
+                            error: axiosResponse.data?.error?.message || `HTTP ${axiosResponse.status}`
+                        });
+                    }
+
+                    // Small delay to avoid FB rate limits
+                    await new Promise(resolve => setTimeout(resolve, 200));
+
+                } catch (err: any) {
+                    failed++;
+                    results.push({
+                        click_id: click.click_id,
+                        status: 'error',
+                        error: err.message
+                    });
+                }
+            }
+
+            console.log(`📦 Bulk FB resend complete: ${sent} sent, ${failed} failed out of ${clicksResult.rows.length}`);
+
+            res.json({
+                success: true,
+                message: `Масова відправка завершена: ${sent} успішно, ${failed} помилок`,
+                total: clicksResult.rows.length,
+                sent,
+                failed,
+                results
+            });
+        } catch (error: any) {
+            console.error('Error in bulk FB resend:', error);
+            res.status(500).json({ error: error.message || 'Failed to bulk resend' });
         }
     }
 

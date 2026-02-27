@@ -82,7 +82,8 @@ export class AttributionController {
                     fbclid: matchingClick.fbclid,
                     ip: deviceInfo.ip,
                     userAgent: deviceInfo.user_agent,
-                    clickId: matchingClick.click_id
+                    clickId: matchingClick.click_id,
+                    domain: (req as any).tenant?.domain
                 });
             }
 

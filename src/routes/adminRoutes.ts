@@ -54,6 +54,9 @@ router.delete('/admin/logs/postbacks', adminController.clearPostbackLogs.bind(ad
 router.get('/admin/logs/errors', adminController.getErrorLogs.bind(adminController));
 router.delete('/admin/logs/errors', adminController.clearErrorLogs.bind(adminController));
 
+// Bulk resend Facebook events from clicks table
+router.post('/admin/bulk-resend-fb', adminController.bulkResendFacebook.bind(adminController));
+
 
 export default router;
 

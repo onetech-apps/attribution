@@ -17,6 +17,7 @@ interface FacebookEventParams {
     value?: number;    // Revenue amount (for PURCHASE events)
     currency?: string; // Currency code, e.g. 'USD' (for PURCHASE events)
     clickId?: string;  // For logging
+    domain?: string;   // App domain for event_source_url
 }
 
 export class FacebookConversionApi {
@@ -35,7 +36,7 @@ export class FacebookConversionApi {
             event_name: params.eventName,
             event_time: params.eventTime || Math.floor(Date.now() / 1000),
             action_source: 'website',
-            event_source_url: 'https://' + (process.env.DOMAIN || 'onebuy.pro'),
+            event_source_url: params.domain ? `https://${params.domain}` : ('https://' + (process.env.DOMAIN || 'oneapps.info')),
             user_data: {
                 client_ip_address: params.ip,
                 client_user_agent: params.userAgent,
