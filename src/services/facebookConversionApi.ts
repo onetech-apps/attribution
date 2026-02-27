@@ -7,7 +7,7 @@ import axios from 'axios';
 import { eventLogger } from '../utils/eventLogger';
 
 interface FacebookEventParams {
-    eventName: string; // APP_INSTALL, COMPLETE_REGISTRATION, PURCHASE
+    eventName: string; // Lead, CompleteRegistration, Purchase
     pixelId: string;
     accessToken: string;
     fbclid: string;
@@ -103,34 +103,34 @@ export class FacebookConversionApi {
     }
 
     /**
-     * Send APP_INSTALL event
+     * Send Lead event (replaces APP_INSTALL for iOS web-to-app flow)
      */
     async sendAppInstall(params: Omit<FacebookEventParams, 'eventName'>): Promise<void> {
         await this.sendEvent({
             ...params,
-            eventName: 'APP_INSTALL',
+            eventName: 'Lead',
         });
     }
 
     /**
-     * Send COMPLETE_REGISTRATION event
+     * Send CompleteRegistration event
      */
     async sendRegistration(params: Omit<FacebookEventParams, 'eventName'>): Promise<void> {
         await this.sendEvent({
             ...params,
-            eventName: 'COMPLETE_REGISTRATION',
+            eventName: 'CompleteRegistration',
         });
     }
 
     /**
-     * Send PURCHASE event
+     * Send Purchase event
      */
     async sendPurchase(
         params: Omit<FacebookEventParams, 'eventName'>
     ): Promise<void> {
         await this.sendEvent({
             ...params,
-            eventName: 'PURCHASE',
+            eventName: 'Purchase',
         });
     }
 }

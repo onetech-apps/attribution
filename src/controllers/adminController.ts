@@ -601,7 +601,7 @@ export class AdminController {
     async bulkResendFacebook(req: Request, res: Response): Promise<void> {
         try {
             const { dateFrom, dateTo, eventName } = req.body;
-            const fbEventName = eventName || 'COMPLETE_REGISTRATION';
+            const fbEventName = eventName || 'CompleteRegistration';
 
             // Build query to find attributed clicks with FB credentials
             let dateFilter = '';
@@ -616,11 +616,11 @@ export class AdminController {
                 dateFilter += ` AND c.created_at <= $${params.length}`;
             }
 
-            // For APP_INSTALL: all attributed clicks are valid
-            // For COMPLETE_REGISTRATION / PURCHASE: only clicks that actually received a Keitaro postback
+            // For Lead (install): all attributed clicks are valid
+            // For CompleteRegistration / Purchase: only clicks that actually received a Keitaro postback
             let extraJoin = '';
             let extraWhere = '';
-            if (fbEventName !== 'APP_INSTALL') {
+            if (fbEventName !== 'Lead') {
                 // Only include clicks that have a Keitaro postback (GET with status 200)
                 extraJoin = ` INNER JOIN postback_logs pl ON pl.click_id = c.click_id AND pl.method = 'GET' AND pl.response_status = 200`;
             }
