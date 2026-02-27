@@ -413,23 +413,56 @@ export class AdminController {
                     payload = typeof log.payload === 'string' ? JSON.parse(log.payload) : log.payload;
                     postUrl = log.url;
 
-                    // --- MUTATE OLD PAYLOADS FOR FB CAPI ---
-                    // The old API integration incorrectly sent "action_source": "app" 
-                    // which causes FB to return a 400. We patch it here before resending.
-                    if (payload && Array.isArray(payload.data)) {
-                        payload.data = payload.data.map((event: any) => {
-                            if (event.action_source === 'app') {
-                                event.action_source = 'website';
-                            }
-                            return event;
-                        });
-                    }
+                    // --- REBUILD FACEBOOK REQUEST FROM SCRATCH ---
+                    // The old logs have broken payloads (missing tokens, bad URLs, "app" source).
+                    // We extract original clean data from the clicks table to reconstruct an ideal request.
+                    if (postUrl.includes('graph.facebook.com')) {
+                        let rebuilt = false;
+                        if (log.click_id) {
+                            const clickRes = await query('SELECT * FROM clicks WHERE click_id = $1', [log.click_id]);
+                            if (clickRes.rows.length > 0) {
+                                const click = clickRes.rows[0];
+                                if (click.fb_token && click.fb_id) {
+                                    // Extract original event name before overwriting
+                                    let eventName = 'COMPLETE_REGISTRATION';
+                                    if (payload && Array.isArray(payload.data) && payload.data[0]?.event_name) {
+                                        eventName = payload.data[0].event_name;
+                                    }
 
-                    // Facebook Graph API requires access_token, which might be in the payload object
-                    // but axios.post(url, payload) might need it explicitly or as a query param
-                    if (postUrl.includes('graph.facebook.com') && payload && payload.access_token) {
-                        if (!postUrl.includes('access_token=')) {
-                            postUrl += (postUrl.includes('?') ? '&' : '?') + 'access_token=' + payload.access_token;
+                                    payload = {
+                                        data: [{
+                                            event_name: eventName,
+                                            event_time: Math.floor(Date.now() / 1000), // current retry time
+                                            action_source: 'website',
+                                            event_source_url: 'https://' + (process.env.DOMAIN || 'oneapps.info'),
+                                            user_data: {
+                                                client_ip_address: click.ip_address,
+                                                client_user_agent: click.user_agent,
+                                                fbc: click.fbclid ? `fb.1.${Date.now()}.${click.fbclid}` : undefined
+                                            }
+                                        }],
+                                        access_token: click.fb_token
+                                    };
+
+                                    // Safely overwrite postUrl with absolute correct Pixel ID and Token
+                                    postUrl = `https://graph.facebook.com/v18.0/${click.fb_id}/events?access_token=${click.fb_token}`;
+                                    rebuilt = true;
+                                    console.log(`♻️ Reconstructed complete FB CAPI payload from click ${log.click_id}`);
+                                }
+                            }
+                        }
+
+                        // Fallback mutation if we couldn't rebuild from DB (e.g. click was deleted or no token)
+                        if (!rebuilt) {
+                            if (payload && Array.isArray(payload.data)) {
+                                payload.data = payload.data.map((event: any) => {
+                                    if (event.action_source === 'app') event.action_source = 'website';
+                                    return event;
+                                });
+                            }
+                            if (payload && payload.access_token && !postUrl.includes('access_token=')) {
+                                postUrl += (postUrl.includes('?') ? '&' : '?') + 'access_token=' + payload.access_token;
+                            }
                         }
                     }
 
