@@ -364,15 +364,59 @@ export class AdminController {
     /**
      * Get postback logs
      * GET /api/v1/admin/logs/postbacks
+     * Supports: ?page=1&limit=20&search=click_id&status=failed|success|all
      */
     async getPostbackLogs(req: Request, res: Response): Promise<void> {
         try {
-            const limit = parseInt(req.query.limit as string) || 50;
-            const result = await query(
-                'SELECT * FROM postback_logs ORDER BY created_at DESC LIMIT $1',
-                [limit]
+            const page = Math.max(1, parseInt(req.query.page as string) || 1);
+            const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+            const search = (req.query.search as string || '').trim();
+            const statusFilter = (req.query.status as string || 'all').toLowerCase();
+            const offset = (page - 1) * limit;
+
+            let whereClause = '';
+            const params: any[] = [];
+            const conditions: string[] = [];
+
+            if (search) {
+                params.push(`%${search}%`);
+                conditions.push(`(click_id ILIKE $${params.length} OR url ILIKE $${params.length})`);
+            }
+
+            if (statusFilter === 'failed') {
+                conditions.push(`(response_status < 200 OR response_status >= 300)`);
+            } else if (statusFilter === 'success') {
+                conditions.push(`(response_status >= 200 AND response_status < 300)`);
+            }
+
+            if (conditions.length > 0) {
+                whereClause = 'WHERE ' + conditions.join(' AND ');
+            }
+
+            // Get total count
+            const countResult = await query(
+                `SELECT COUNT(*) as total FROM postback_logs ${whereClause}`,
+                params
             );
-            res.json({ logs: result.rows });
+            const total = parseInt(countResult.rows[0].total);
+
+            // Get paginated results
+            params.push(limit);
+            params.push(offset);
+            const result = await query(
+                `SELECT * FROM postback_logs ${whereClause} ORDER BY created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+                params
+            );
+
+            res.json({
+                logs: result.rows,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages: Math.ceil(total / limit)
+                }
+            });
         } catch (error) {
             console.error('Error getting postback logs:', error);
             res.status(500).json({ error: 'Failed to get postback logs' });
@@ -480,8 +524,11 @@ export class AdminController {
                 const isSuccess = axiosResponse.status >= 200 && axiosResponse.status < 300;
 
                 if (isSuccess) {
-                    // If success, we delete the old failed log
-                    await query('DELETE FROM postback_logs WHERE id = $1', [id]);
+                    // Update the log entry with the new success status (keep it visible)
+                    await query(
+                        'UPDATE postback_logs SET response_status = $1, response_body = $2, url = $3, payload = $4, created_at = CURRENT_TIMESTAMP WHERE id = $5',
+                        [axiosResponse.status, JSON.stringify(axiosResponse.data), log.method === 'POST' ? postUrl : fullUrl, JSON.stringify(log.method === 'POST' ? payload : log.payload), id]
+                    );
                 } else {
                     // Update the log entry with the new error to reflect the latest attempt
                     await query(

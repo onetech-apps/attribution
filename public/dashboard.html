@@ -766,7 +766,7 @@
                         <span style="font-weight: 500;">Live Updates</span>
                     </div>
                     <div style="flex-grow: 1;"></div>
-                    <button class="btn" onclick="loadData(this)"><i data-lucide="refresh-cw" size="16"></i>
+                    <button class="btn btn-sm" onclick="loadData(this)"><i data-lucide="refresh-cw"></i>
                         Оновити</button>
                 </div>
 
@@ -804,12 +804,12 @@
                 </div>
                 <div class="pagination" id="clicksPagination"
                     style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
-                    <button class="btn btn-secondary" onclick="changeClicksPage(-1)" id="btnClicksPrev" disabled><i
-                            data-lucide="chevron-left" size="14"></i> Назад</button>
+                    <button class="btn btn-secondary btn-sm" onclick="changeClicksPage(-1)" id="btnClicksPrev"
+                        disabled><i data-lucide="chevron-left"></i> Назад</button>
                     <span style="align-self: center; font-size: 14px; font-weight: 500; color: var(--text-muted);"
                         id="clicksPageInfo">Сторінка 1</span>
-                    <button class="btn btn-secondary" onclick="changeClicksPage(1)" id="btnClicksNext"><i
-                            data-lucide="chevron-right" size="14"></i> Далі</button>
+                    <button class="btn btn-secondary btn-sm" onclick="changeClicksPage(1)" id="btnClicksNext"><i
+                            data-lucide="chevron-right"></i> Далі</button>
                 </div>
             </div>
 
@@ -866,6 +866,17 @@
                     <button class="btn btn-danger btn-sm" onclick="clearLogs('postbacks')"><i data-lucide="trash-2"></i>
                         Очистити</button>
                 </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;">
+                    <input type="text" id="logsSearch" placeholder="Пошук по Click ID..."
+                        onkeydown="if(event.key==='Enter') searchLogs()">
+                    <select id="logsStatusFilter" onchange="searchLogs()">
+                        <option value="all">Всі статуси</option>
+                        <option value="success">✅ Успішні (2xx)</option>
+                        <option value="failed">❌ Помилки</option>
+                    </select>
+                    <button class="btn btn-secondary btn-sm" onclick="searchLogs()"><i data-lucide="search"></i>
+                        Шукати</button>
+                </div>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -886,12 +897,21 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination" id="logsPagination"
+                    style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; align-items: center;">
+                    <button class="btn btn-secondary btn-sm" onclick="changeLogsPage(-1)" id="btnLogsPrev" disabled><i
+                            data-lucide="chevron-left"></i> Назад</button>
+                    <span style="font-size: 14px; font-weight: 500; color: var(--text-muted);"
+                        id="logsPageInfo">Сторінка 1</span>
+                    <button class="btn btn-secondary btn-sm" onclick="changeLogsPage(1)" id="btnLogsNext"><i
+                            data-lucide="chevron-right"></i> Далі</button>
+                </div>
             </div>
 
             <div id="logs-errors" class="log-section" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3>Логи Помилок</h3>
-                    <button class="btn btn-danger" onclick="clearLogs('errors')"><i data-lucide="trash-2" size="14"></i>
+                    <button class="btn btn-danger btn-sm" onclick="clearLogs('errors')"><i data-lucide="trash-2"></i>
                         Очистити</button>
                 </div>
                 <div class="table-container">
@@ -989,14 +1009,41 @@
             }
         }
 
+        // --- Logs pagination state ---
+        let logsCurrentPage = 1;
+        let logsTotalPages = 1;
+
+        function searchLogs() {
+            logsCurrentPage = 1;
+            loadLogs('postbacks');
+        }
+
+        function changeLogsPage(delta) {
+            logsCurrentPage += delta;
+            if (logsCurrentPage < 1) logsCurrentPage = 1;
+            if (logsCurrentPage > logsTotalPages) logsCurrentPage = logsTotalPages;
+            loadLogs('postbacks');
+        }
+
         async function loadLogs(type) {
             try {
-                const response = await fetch(`${API_BASE}/admin/logs/${type}?limit=50`);
+                let url;
+                if (type === 'postbacks') {
+                    const search = document.getElementById('logsSearch')?.value || '';
+                    const status = document.getElementById('logsStatusFilter')?.value || 'all';
+                    url = `${API_BASE}/admin/logs/${type}?page=${logsCurrentPage}&limit=20&search=${encodeURIComponent(search)}&status=${status}`;
+                } else {
+                    url = `${API_BASE}/admin/logs/${type}?limit=50`;
+                }
+                const response = await fetch(url);
                 const data = await response.json();
                 const tbody = document.getElementById(type === 'postbacks' ? 'postbackLogsBody' : 'errorLogsBody');
 
                 if (!data.logs || data.logs.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="${type === 'postbacks' ? '7' : '6'}" style="text-align: center; color: var(--text-muted);">Логів не знайдено</td></tr>`;
+                    if (type === 'postbacks') {
+                        document.getElementById('logsPagination').style.display = 'none';
+                    }
                     return;
                 }
 
@@ -1016,10 +1063,19 @@
                             <td>
                                 ${log.response_status < 200 || log.response_status >= 300
                             ? `<button class="btn btn-primary btn-sm" onclick="resendLog(${log.id})"><i data-lucide="refresh-cw"></i> Перевідправити</button>`
-                            : ''}
+                            : '<span class="badge badge-success">✅</span>'}
                             </td>
                         </tr>
                     `).join('');
+
+                    // Update pagination
+                    if (data.pagination) {
+                        logsTotalPages = data.pagination.totalPages;
+                        document.getElementById('logsPageInfo').textContent = `Сторінка ${data.pagination.page} з ${data.pagination.totalPages} (${data.pagination.total} записів)`;
+                        document.getElementById('btnLogsPrev').disabled = data.pagination.page <= 1;
+                        document.getElementById('btnLogsNext').disabled = data.pagination.page >= data.pagination.totalPages;
+                        document.getElementById('logsPagination').style.display = data.pagination.totalPages > 1 ? 'flex' : 'none';
+                    }
                 } else {
                     tbody.innerHTML = data.logs.map(log => `
                         <tr>
