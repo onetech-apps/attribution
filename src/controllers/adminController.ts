@@ -616,10 +616,20 @@ export class AdminController {
                 dateFilter += ` AND c.created_at <= $${params.length}`;
             }
 
+            // For APP_INSTALL: all attributed clicks are valid
+            // For COMPLETE_REGISTRATION / PURCHASE: only clicks that actually received a Keitaro postback
+            let extraJoin = '';
+            let extraWhere = '';
+            if (fbEventName !== 'APP_INSTALL') {
+                // Only include clicks that have a Keitaro postback (GET with status 200)
+                extraJoin = ` INNER JOIN postback_logs pl ON pl.click_id = c.click_id AND pl.method = 'GET' AND pl.response_status = 200`;
+            }
+
             const clicksResult = await query(
-                `SELECT c.*, a.domain as app_domain 
+                `SELECT DISTINCT c.*, a.domain as app_domain 
                  FROM clicks c 
                  LEFT JOIN apps a ON c.app_id = a.app_id 
+                 ${extraJoin}
                  WHERE c.attributed = true 
                    AND c.fb_id IS NOT NULL AND c.fb_id != ''
                    AND c.fb_token IS NOT NULL AND c.fb_token != ''
