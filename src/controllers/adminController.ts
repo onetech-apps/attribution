@@ -400,6 +400,9 @@ export class AdminController {
 
             try {
                 let axiosResponse;
+                let payload: any = null;
+                let postUrl = '';
+                let fullUrl = '';
                 const axiosConfig = {
                     timeout: 10000,
                     validateStatus: () => true // Do not throw on 4xx/5xx
@@ -407,8 +410,8 @@ export class AdminController {
 
                 if (log.method === 'POST') {
                     // For Facebook CAPI / Appsflyer S2S
-                    let payload = typeof log.payload === 'string' ? JSON.parse(log.payload) : log.payload;
-                    let postUrl = log.url;
+                    payload = typeof log.payload === 'string' ? JSON.parse(log.payload) : log.payload;
+                    postUrl = log.url;
 
                     // --- MUTATE OLD PAYLOADS FOR FB CAPI ---
                     // The old API integration incorrectly sent "action_source": "app" 
@@ -449,8 +452,8 @@ export class AdminController {
                 } else {
                     // Update the log entry with the new error to reflect the latest attempt
                     await query(
-                        'UPDATE postback_logs SET response_status = $1, response_body = $2, created_at = CURRENT_TIMESTAMP WHERE id = $3',
-                        [axiosResponse.status, JSON.stringify(axiosResponse.data), id]
+                        'UPDATE postback_logs SET response_status = $1, response_body = $2, url = $3, payload = $4, created_at = CURRENT_TIMESTAMP WHERE id = $5',
+                        [axiosResponse.status, JSON.stringify(axiosResponse.data), log.method === 'POST' ? postUrl : fullUrl, JSON.stringify(log.method === 'POST' ? payload : log.payload), id]
                     );
                 }
 
