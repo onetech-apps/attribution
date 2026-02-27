@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <script src="/auth.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управління додатками - Attribution System</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            /* Indigo-500 */
+            --primary-hover: #4f46e5;
+            --secondary: #64748b;
+            /* Slate-500 */
+            --secondary-hover: #475569;
+            --success: #10b981;
+            /* Emerald-500 */
+            --danger: #ef4444;
+            /* Red-500 */
+            --warning: #f59e0b;
+            /* Amber-500 */
+            --info: #3b82f6;
+            /* Blue-500 */
+            --background: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--card-bg);
+            padding: 24px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            color: var(--text-main);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .nav-tab {
+            padding: 10px 16px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tab:hover {
+            background: #f8fafc;
+            color: var(--text-main);
+        }
+
+        .nav-tab.active {
+            background: #eef2ff;
+            color: var(--primary);
+            border-color: #e0e7ff;
+        }
+
+        .section {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            color: var(--text-main);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            line-height: 1.5;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-sm svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .btn-icon-sm {
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-hover);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            gap: 4px;
+        }
+
+        .badge-success {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .badge-danger {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .badge-secondary {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* ... existing form styles ... */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .success-message {
+            background: #ecfdf5;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #a7f3d0;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #fecaca;
+        }
+
+        .code-box {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i data-lucide="smartphone"></i> Управління додатками</h1>
+            <p class="subtitle">Управління додатками та доменами</p>
+            <div class="nav-tabs">
+                <button class="nav-tab" onclick="window.location.href='dashboard.html'"><i
+                        data-lucide="layout-dashboard" size="18"></i> Дашборд</button>
+                <button class="nav-tab" onclick="window.location.href='dashboard.html?tab=logs'"><i
+                        data-lucide="file-text" size="18"></i>
+                    Логи</button>
+                <button class="nav-tab" onclick="window.location.href='testing.html'"><i data-lucide="flask-conical"
+                        size="18"></i> Тестування</button>
+                <button class="nav-tab active"><i data-lucide="smartphone" size="18"></i> Додатки</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Додатки</h2>
+                <button class="btn btn-success" onclick="openAddModal()"><i data-lucide="plus-circle"></i> Додати
+                    додаток</button>
+            </div>
+
+            <div id="message"></div>
+
+            <table id="appsTable">
+                <thead>
+                    <tr>
+                        <th>Назва</th>
+                        <th>Домен</th>
+                        <th>Bundle ID</th>
+                        <th>Team ID</th>
+                        <th>API Key</th>
+                        <th>AppsFlyer</th>
+                        <th>Статус</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody id="appsBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px;">Завантаження...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="appModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Додати додаток</h2>
+            <form id="appForm" onsubmit="saveApp(event)">
+                <div class="form-group">
+                    <label>App ID *</label>
+                    <input type="text" id="app_id" required placeholder="com.company.app">
+                </div>
+
+                <div class="form-group">
+                    <label>Домен *</label>
+                    <input type="text" id="domain" required placeholder="app-track.com">
+                </div>
+
+                <div class="form-group">
+                    <label>Team ID (Apple) *</label>
+                    <input type="text" id="team_id" required placeholder="ABC123DEF4" maxlength="10">
+                    <small style="color: #666; font-size: 12px;">10-символьний ID з Apple Developer Account</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Bundle ID *</label>
+                    <input type="text" id="bundle_id" required placeholder="com.company.app">
+                </div>
+
+                <div class="form-group">
+                    <label>Назва додатку *</label>
+                    <input type="text" id="app_name" required placeholder="My App">
+                </div>
+
+                <div class="form-group" id="apiKeyGroup" style="display: none;">
+                    <label>API Key (Тільки для читання)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="api_key_readonly" readonly style="background: #f0f0f0; color: #555;">
+                        <button type="button" class="btn btn-secondary btn-icon" onclick="copyApiKeyFromModal()"><i
+                                data-lucide="copy"></i></button>
+                    </div>
+                    <small style="color: #666; font-size: 12px;">Використовуйте цей ключ для налаштування SDK</small>
+                </div>
+
+                <div class="form-group">
+                    <label>App Store URL</label>
+                    <input type="url" id="app_store_url" placeholder="https://apps.apple.com/app/id123456">
+                    <small style="color: #666; font-size: 12px;">Посилання на додаток в App Store</small>
+                </div>
+
+                <!-- AppsFlyer Configuration -->
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+                    <h3 style="margin-bottom: 15px; color: #5e35b1;">🔄 Налаштування AppsFlyer</h3>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="appsflyer_enabled"
+                                style="margin-right: 10px; width: 20px; height: 20px;">
+                            <span>Увімкнути AppsFlyer (для Moloko, Unity, TikTok, Google Ads)</span>
+                        </label>
+                        <small style="color: #666; font-size: 12px;">Увімкнути AppsFlyer для in-app джерел
+                            атрибуції</small>
+                    </div>
+
+                    <div class="form-group" id="appsflyer_dev_key_group" style="display: none;">
+                        <label>AppsFlyer Dev Key</label>
+                        <input type="text" id="appsflyer_dev_key" placeholder="ABC123DEF456...">
+                        <small style="color: #666; font-size: 12px;">Developer Key з AppsFlyer Dashboard</small>
+                    </div>
+                </div>
+
+                <div class="form-group" id="activeGroup" style="display: none;">
+                    <label>Статус</label>
+                    <select id="active">
+                        <option value="true">Активний</option>
+                        <option value="false">Неактивний</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">Скасувати</button>
+                    <button type="submit" class="btn btn-success">Зберегти</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+        let currentEditId = null;
+
+        // Load apps on page load
+        loadApps();
+
+        async function loadApps() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/apps`);
+                const data = await response.json();
+
+                if (data.success) {
+                    renderApps(data.apps);
+                } else {
+                    showMessage('Помилка завантаження додатків', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading apps:', error);
+                showMessage('Помилка підключення до сервера', 'error');
+            }
+        }
+
+        function renderApps(apps) {
+            const tbody = document.getElementById('appsBody');
+
+            if (apps.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">Немає додатків. Додайте перший!</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = apps.map(app => `
+                <tr>
+                    <td><strong>${app.app_name}</strong></td>
+                    <td><code>${app.domain}</code></td>
+                    <td><code>${app.bundle_id}</code></td>
+                    <td><code>${app.team_id}</code></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <code style="font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${app.api_key.substring(0, 10)}...</code>
+                            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 10px;" onclick="copyToClipboard('${app.api_key}')"><i data-lucide="copy" size="12"></i></button>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge ${app.appsflyer_enabled ? 'badge-success' : 'badge-secondary'}" style="font-size: 11px;">
+                            ${app.appsflyer_enabled ? '<i data-lucide="check" size="12"></i> Увімкнено' : '<i data-lucide="x" size="12"></i> Вимкнено'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${app.active ? 'badge-success' : 'badge-danger'}">
+                            ${app.active ? 'Активний' : 'Неактивний'}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 6px;">
+                            <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; background: #e2e8f0; color: #475569;" onclick="editApp(${app.id})"><i data-lucide="pencil" size="14"></i></button>
+                            <button class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" onclick="deleteApp(${app.id}, '${app.app_name}')"><i data-lucide="trash-2" size="14"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function openAddModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = 'Додати додаток';
+            document.getElementById('appForm').reset();
+            document.getElementById('app_id').disabled = false;
+            document.getElementById('activeGroup').style.display = 'none';
+            document.getElementById('apiKeyGroup').style.display = 'none';
+            document.getElementById('appsflyer_enabled').checked = false;
+            document.getElementById('appsflyer_dev_key_group').style.display = 'none';
+            document.getElementById('appModal').classList.add('active');
+        }
+
+        async function editApp(id) {
+            try {
+                const response = await fetch(`${API_BASE}/admin/apps`);
+                const data = await response.json();
+                const app = data.apps.find(a => a.id === id);
+
+                if (!app) return;
+
+                currentEditId = id;
+                document.getElementById('modalTitle').textContent = 'Редагувати додаток';
+                document.getElementById('app_id').value = app.app_id;
+                document.getElementById('app_id').disabled = true;
+                document.getElementById('domain').value = app.domain;
+                document.getElementById('team_id').value = app.team_id;
+                document.getElementById('bundle_id').value = app.bundle_id;
+                document.getElementById('app_name').value = app.app_name;
+                document.getElementById('app_store_url').value = app.app_store_url || '';
+                document.getElementById('appsflyer_enabled').checked = app.appsflyer_enabled || false;
+                document.getElementById('appsflyer_dev_key').value = app.appsflyer_dev_key || '';
+                document.getElementById('appsflyer_dev_key_group').style.display = app.appsflyer_enabled ? 'block' : 'none';
+                document.getElementById('active').value = app.active.toString();
+                document.getElementById('activeGroup').style.display = 'block';
+                // Show API Key in Edit Mode
+                document.getElementById('apiKeyGroup').style.display = 'block';
+                document.getElementById('api_key_readonly').value = app.api_key;
+
+                document.getElementById('appModal').classList.add('active');
+            } catch (error) {
+                console.error('Error loading app:', error);
+                showMessage('Помилка завантаження додатку', 'error');
+            }
+        }
+
+        async function saveApp(event) {
+            event.preventDefault();
+
+            const formData = {
+                app_id: document.getElementById('app_id').value,
+                domain: document.getElementById('domain').value,
+                team_id: document.getElementById('team_id').value,
+                bundle_id: document.getElementById('bundle_id').value,
+                app_name: document.getElementById('app_name').value,
+                app_store_url: document.getElementById('app_store_url').value,
+                appsflyer_enabled: document.getElementById('appsflyer_enabled').checked,
+                appsflyer_dev_key: document.getElementById('appsflyer_dev_key').value || null,
+                active: document.getElementById('active').value === 'true'
+            };
+
+            try {
+                let response;
+                if (currentEditId) {
+                    // Update
+                    response = await fetch(`${API_BASE}/admin/apps/${currentEditId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                } else {
+                    // Create
+                    response = await fetch(`${API_BASE}/admin/apps`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    closeModal();
+                    loadApps();
+
+                    // Show API key for new apps
+                    if (!currentEditId && data.app) {
+                        setTimeout(() => {
+                            showMessage(`API Key: ${data.app.api_key}`, 'success');
+                        }, 500);
+                    }
+                } else {
+                    showMessage(data.error || 'Помилка збереження', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving app:', error);
+                showMessage('Помилка підключення до сервера', 'error');
+            }
+        }
+
+        async function deleteApp(id, name) {
+            if (!confirm(`Видалити додаток "${name}"?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/apps/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    loadApps();
+                } else {
+                    showMessage(data.error || 'Помилка видалення', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting app:', error);
+                showMessage('Помилка підключення до сервера', 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('appModal').classList.remove('active');
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showMessage('API Key скопійовано!', 'success');
+            } catch (err) {
+                showMessage('Не вдалося скопіювати', 'error');
+            }
+        }
+
+        function copyApiKeyFromModal() {
+            const key = document.getElementById('api_key_readonly').value;
+            copyToClipboard(key);
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = text;
+            messageDiv.style.display = 'block';
+
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Close modal on outside click
+        document.getElementById('appModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Toggle AppsFlyer Dev Key field
+        document.getElementById('appsflyer_enabled').addEventListener('change', function (e) {
+            const devKeyGroup = document.getElementById('appsflyer_dev_key_group');
+            devKeyGroup.style.display = e.target.checked ? 'block' : 'none';
+            if (!e.target.checked) {
+                document.getElementById('appsflyer_dev_key').value = '';
+            }
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

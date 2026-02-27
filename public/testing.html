@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <script src="/auth.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attribution System - Інструменти тестування</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            /* Indigo-500 */
+            --primary-hover: #4f46e5;
+            --secondary: #64748b;
+            /* Slate-500 */
+            --secondary-hover: #475569;
+            --success: #10b981;
+            /* Emerald-500 */
+            --danger: #ef4444;
+            /* Red-500 */
+            --warning: #f59e0b;
+            /* Amber-500 */
+            --info: #3b82f6;
+            /* Blue-500 */
+            --background: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--card-bg);
+            padding: 24px 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            color: var(--text-main);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .nav-tab {
+            padding: 10px 16px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tab:hover {
+            background: #f8fafc;
+            color: var(--text-main);
+        }
+
+        .nav-tab.active {
+            background: #eef2ff;
+            color: var(--primary);
+            border-color: #e0e7ff;
+        }
+
+        .section {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            color: var(--text-main);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            line-height: 1.5;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-sm svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .btn-icon-sm {
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-hover);
+        }
+
+        .btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            background: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .step-item {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transition: all 0.3s;
+        }
+
+        .step-item.success {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+
+        .step-item.error {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .step-item.pending {
+            opacity: 0.6;
+        }
+
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .code-snippet code {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Verification Steps Styles */
+        .step-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .step-card.step-success {
+            border-left: 5px solid #28a745;
+            background: #f8fff9;
+        }
+
+        .step-card.step-failed {
+            border-left: 5px solid #dc3545;
+            background: #fff8f8;
+        }
+
+        .step-card.step-warning {
+            border-left: 5px solid #ffc107;
+            background: #fffff8;
+        }
+
+        .step-card.step-pending {
+            border-left: 5px solid #ccc;
+            opacity: 0.7;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .step-status {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #eee;
+            color: #666;
+        }
+
+        .step-success .step-status {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .step-failed .step-status {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .step-warning .step-status {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .tool-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+            flex-wrap: wrap;
+            /* Allow wrapping on small screens */
+        }
+
+        .tool-tab {
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .tool-tab:hover {
+            background: #f8fafc;
+        }
+
+        .tool-tab.active {
+            background: #eef2ff;
+            color: var(--primary);
+            border-color: #e0e7ff;
+        }
+
+        .tool-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tool-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-details {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #555;
+            display: none;
+            word-break: break-all;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i data-lucide="flask-conical"></i> Інструменти тестування</h1>
+            <p class="subtitle">Інструменти для верифікації трекінгу та дебаггінгу</p>
+            <div class="nav-tabs">
+                <button class="nav-tab" onclick="window.location.href='dashboard.html'"><i
+                        data-lucide="layout-dashboard"></i> Дашборд</button>
+                <button class="nav-tab" onclick="window.location.href='dashboard.html?tab=logs'"><i
+                        data-lucide="file-text"></i>
+                    Логи</button>
+                <button class="nav-tab active"><i data-lucide="flask-conical"></i> Тестування</button>
+                <button class="nav-tab" onclick="window.location.href='apps.html'"><i data-lucide="smartphone"></i>
+                    Додатки</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="tool-tabs">
+                <button class="tool-tab active" onclick="switchTab('verification')"><i data-lucide="shield-check"></i>
+                    Перевірка посилання</button>
+                <button class="tool-tab" onclick="switchTab('manual')"><i data-lucide="wrench"></i> Ручні
+                    інструменти</button>
+            </div>
+
+            <!-- Verification Tab -->
+            <div id="verification" class="tool-content active">
+                <h2 style="font-size: 16px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 15px;">
+                    Розумна перевірка посилання</h2>
+
+                <div
+                    style="background: var(--background); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label>Tracking Link URL</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="verifyUrl" placeholder="https://oneapps.info?sub1=..."
+                                value="https://oneapps.info/?sub1=test_campaign">
+                            <button class="btn" onclick="verifyLink()" id="verifyBtn"><i data-lucide="play"></i>
+                                Запустити тест</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="steps-container" id="stepsContainer">
+                    <div class="step-card" id="step1">
+                        <div class="step-header">
+                            <span class="step-icon">📝</span>
+                            <span class="step-title">1. Перевірка формату URL</span>
+                            <span class="step-status">Очікування</span>
+                        </div>
+                        <div class="step-details"></div>
+                    </div>
+
+                    <div class="step-card" id="step2">
+                        <div class="step-header">
+                            <span class="step-icon">🌐</span>
+                            <span class="step-title">2. Перевірка HTTP Redirect</span>
+                            <span class="step-status">Очікування</span>
+                        </div>
+                        <div class="step-details"></div>
+                    </div>
+
+                    <div class="step-card" id="step3">
+                        <div class="step-header">
+                            <span class="step-icon">💾</span>
+                            <span class="step-title">3. Пошук кліка в БД</span>
+                            <span class="step-status">Очікування</span>
+                        </div>
+                        <div class="step-details"></div>
+                    </div>
+                </div>
+
+                <!-- Simulate Install Section (Visible only after successful click check) -->
+                <div id="simulateSection"
+                    style="display: none; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <h3>📲 Симуляція Інсталу (Attribution)</h3>
+                    <p style="color: #666; margin-bottom: 15px;">Клік знайдено! Тепер можна симулювати відкриття
+                        додатку.</p>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>IDFV</label>
+                            <input type="text" id="sim_idfv" value="">
+                        </div>
+                        <div class="form-group">
+                            <label>User Agent</label>
+                            <input type="text" id="sim_ua"
+                                value="Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)...">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success" onclick="simulateInstall()">▶️ Симулювати Attribution</button>
+                    <div id="installResult" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+
+            <!-- Manual Tools Tab -->
+            <div id="manual" class="tool-content">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- URL Generator -->
+                    <div style="border: 1px solid var(--border); padding: 20px; border-radius: 12px;">
+                        <h3><i data-lucide="link"></i> Генератор URL</h3>
+                        <p style="color: var(--secondary); font-size: 13px; margin: 8px 0 16px;">📝 Створює
+                            трекінг-посилання для реклами. Юзер клікає на це посилання → переходить в App Store →
+                            встановлює додаток. Сервер запам'ятовує клік для атрибуції.</p>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label>Додаток</label>
+                            <select id="appSelector" onchange="updateUrlPreview()">
+                                <option value="">Завантаження...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>sub1 (назва кампанії / buyer ID)</label>
+                            <input type="text" id="gen_sub1" placeholder="campaign_name" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>sub2 (гео)</label>
+                            <input type="text" id="gen_sub2" placeholder="US" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>sub3 (креатив)</label>
+                            <input type="text" id="gen_sub3" placeholder="creative_1" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>sub4</label>
+                            <input type="text" id="gen_sub4" placeholder="" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>sub5</label>
+                            <input type="text" id="gen_sub5" placeholder="" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Facebook Pixel ID</label>
+                            <input type="text" id="gen_pixel" placeholder="123456789" oninput="updateUrlPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Facebook Token</label>
+                            <input type="text" id="gen_fb_token" placeholder="EAAxxxxxxx" oninput="updateUrlPreview()">
+                        </div>
+                        <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; word-break: break-all; font-family: monospace; font-size: 12px; margin-bottom: 10px;"
+                            id="urlPreview">
+                            -
+                        </div>
+                        <button class="btn btn-secondary" onclick="copyGeneratedUrl()"><i data-lucide="copy"></i>
+                            Копіювати URL</button>
+                    </div>
+
+                    <!-- Postback Sender -->
+                    <div style="border: 1px solid var(--border); padding: 20px; border-radius: 12px;">
+                        <h3><i data-lucide="send"></i> Тест постбеку</h3>
+                        <p style="color: var(--secondary); font-size: 13px; margin: 8px 0 16px;">📤 Імітує повідомлення
+                            від CPA-мережі: "Цей клік конвертувався!" Якщо у кліка є FB Pixel — відправить подію
+                            конверсії у Facebook для оптимізації реклами.</p>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label>Click ID</label>
+                            <input type="text" id="pb_click_id" placeholder="clk_xxxxxxxxxx... (з таблиці кліків)">
+                        </div>
+                        <div class="form-group">
+                            <label>Статус конверсії</label>
+                            <select id="pb_status">
+                                <option value="lead">lead — реєстрація</option>
+                                <option value="sale">sale — депозит/оплата</option>
+                                <option value="reject">reject — відхилено</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="sendTestPostback()"><i data-lucide="send"></i> Надіслати
+                            Postback</button>
+                        <div id="pb_result" style="margin-top: 10px; font-size: 12px;"></div>
+                    </div>
+                </div>
+
+                <!-- Attribution Simulator -->
+                <div class="section" style="margin-top: 24px;">
+                    <h2>🎯 Симулятор Attribution</h2>
+                    <p style="color: var(--secondary); font-size: 13px; margin: 8px 0 16px;">📱 Імітує перший запуск
+                        додатку. Відправляє дані пристрою на сервер → сервер шукає відповідний клік за IP → повертає
+                        <b>final_url</b> (посилання на оффер у Keitaro) для показу у WebView додатку.
+                    </p>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Додаток</label>
+                            <select id="attr_app_select">
+                                <option value="">Завантаження...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>IDFV</label>
+                            <input type="text" id="attr_idfv" value=""
+                                placeholder="03B8DFBA-743F-4A42-91DD-166868073B19">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Device Model</label>
+                            <input type="text" id="attr_device" value="iPhone14,2">
+                        </div>
+                        <div class="form-group">
+                            <label>OS Version</label>
+                            <input type="text" id="attr_os" value="17.0">
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="simulateAttribution()">▶️ Симулювати Attribution</button>
+                    <div id="attributionResult"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+        let foundClickData = null;
+
+        function switchTab(tabName) {
+            // Hide all contents
+            document.querySelectorAll('.tool-content').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected content
+            const selected = document.getElementById(tabName);
+            if (selected) selected.classList.add('active');
+
+            // Update tab buttons
+            const buttons = document.querySelectorAll('.tool-tab');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Find the button that called this function and activate it
+            // Or assume order match. Let's rely on event.currentTarget if possible, or simple indexing?
+            // Simple indexing relies on order.
+            if (tabName === 'verification') {
+                buttons[0].classList.add('active');
+            } else {
+                buttons[1].classList.add('active');
+            }
+        }
+
+        function updateStep(stepId, status, details) {
+            const card = document.getElementById(stepId);
+            const statusBadge = card.querySelector('.step-status');
+            const detailsDiv = card.querySelector('.step-details');
+
+            card.className = 'step-card step-' + status;
+            statusBadge.textContent = status.toUpperCase();
+
+            if (details) {
+                detailsDiv.innerHTML = details;
+                detailsDiv.style.display = 'block';
+            }
+        }
+
+        async function verifyLink() {
+            const url = document.getElementById('verifyUrl').value;
+            if (!url) return;
+
+            // Reset UI
+            // document.getElementById('verifyResult').style.display = 'block'; // No such element in new structure
+            document.getElementById('simulateSection').style.display = 'none';
+            ['step1', 'step2', 'step3'].forEach(id => {
+                const el = document.getElementById(id);
+                el.className = 'step-card';
+                el.querySelector('.step-status').textContent = 'Очікування';
+                el.querySelector('.step-details').style.display = 'none';
+            });
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/verify-link`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                const report = await response.json();
+
+                // Step 1
+                if (report.steps && report.steps[0]) {
+                    updateStep('step1', report.steps[0].status, report.steps[0].details || report.steps[0].error);
+                }
+
+                // Step 2
+                if (report.steps && report.steps[1]) {
+                    updateStep('step2', report.steps[1].status, report.steps[1].details || report.steps[1].error);
+                }
+
+                // Step 3
+                if (report.steps && report.steps[2]) {
+                    const step3 = report.steps[2];
+                    const details = step3.details || step3.error;
+                    updateStep('step3', step3.status,
+                        step3.status === 'success'
+                            ? `${details}<br><small>UA: ${report.click?.user_agent}</small>`
+                            : details
+                    );
+                }
+
+                if (report.success && report.click) {
+                    foundClickData = report.click;
+
+                    // Setup simulation
+                    document.getElementById('simulateSection').style.display = 'block';
+                    document.getElementById('sim_idfv').value = 'TEST-' + Math.random().toString(36).substr(2, 10).toUpperCase();
+                    document.getElementById('sim_ua').value = report.click.user_agent; // Use same UA for matching!
+                }
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function simulateInstall() {
+            if (!foundClickData) return;
+
+            const resultDiv = document.getElementById('installResult');
+            resultDiv.innerHTML = '<div class="info-box">⏳ Відправка запиту атрибуції...</div>';
+
+            const attrData = {
+                idfv: document.getElementById('sim_idfv').value,
+                user_agent: document.getElementById('sim_ua').value,
+                ip: foundClickData.ip_address, // Ideally we simulate this too, but for local env we might need to rely on matching logic handling localhost
+                // For proper testing, we need to pass the IP. 
+                // But wait, the API reads IP from request. 
+                // Testing from browser = ::1 or 127.0.0.1.
+                // Click in DB might be different.
+                // WE NEED TO MOCK IP in backend for testing tools? 
+                // Or just hope they match (both localhost).
+
+                // Let's rely on backend logic. 
+                // However, attributionController uses req.ip. 
+                // If I call from browser, req.ip is my IP.
+                // If I used backend tool, verifyLink, it used axios (server IP).
+                // They should match if running locally.
+            };
+
+            // Add other required fields
+            Object.assign(attrData, {
+                device_model: 'iPhone14,2',
+                os_version: '16.0',
+                app_version: '1.0.0',
+                bundle: 'com.example.app'
+            });
+
+            try {
+                const response = await fetch(`${API_BASE}/attribution`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(attrData)
+                });
+
+                const result = await response.json();
+
+                // For simulator, we want to force IP match if possible. 
+                // But passing IP in body is not standard.
+                // The verification tool works best if running in same env.
+
+                // Result display
+                if (result.attributed) {
+                    resultDiv.innerHTML = `
+                        <div class="success-message">
+                            ✅ <strong>ATTRIBUTED!</strong><br>
+                            Click ID: ${result.click_id}<br>
+                            Final URL: <a href="${result.final_url}" target="_blank">${result.final_url}</a>
+                        </div>
+                        <div class="code-snippet">
+                            <code>${JSON.stringify(result, null, 2)}</code>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error-message">
+                            ❌ <strong>Органіка / Не атрибутовано</strong><br>
+                            Збігів не знайдено.
+                            <br><small>Score User-Agent може бути занизьким або IP не співпадає.</small>
+                        </div>
+                         <div class="code-snippet">
+                            <code>${JSON.stringify(result, null, 2)}</code>
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error-message">Помилка: ${error.message}</div>`;
+            }
+        }
+
+        // --- Legacy Functions ---
+
+        function fillRandomData() {
+            document.getElementById('click_sub1').value = 'campaign_' + Math.random().toString(36).substr(2, 9);
+            document.getElementById('click_fbclid').value = 'IwAR_' + Math.random().toString(36).substr(2, 15);
+            document.getElementById('click_adsetid').value = Math.floor(Math.random() * 1000000000);
+        }
+
+        let appsList = [];
+
+        // Load apps on startup
+        loadApps();
+
+        async function loadApps() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/apps`);
+                const data = await response.json();
+                if (data.success && data.apps) {
+                    appsList = data.apps;
+                    const optionsHtml = '<option value="">-- Оберіть додаток --</option>' +
+                        appsList.map(app => `<option value="${app.id}">${app.app_name} (${app.domain})</option>`).join('');
+
+                    // Populate all app selectors
+                    const selectors = ['appSelector', 'attr_app_select'];
+                    selectors.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.innerHTML = optionsHtml;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading apps:', error);
+            }
+        }
+
+        function onAppSelect() {
+            const select = document.getElementById('url_app_select');
+            const appId = select.value;
+            const app = appsList.find(a => a.id == appId);
+
+            if (app) {
+                // Determine pixel ID if we stored it, otherwise keep default or existing
+                // Pre-fill Bundle ID in simulator if visible/exists
+                const bundleInput = document.getElementById('attr_bundle');
+                if (bundleInput) bundleInput.value = app.bundle_id;
+            }
+        }
+
+        function generateAdUrl() {
+            const campaign = document.getElementById('url_campaign').value;
+            const fbId = document.getElementById('url_fb_id').value;
+            const fbToken = document.getElementById('url_fb_token').value;
+
+            const select = document.getElementById('url_app_select');
+            const appId = select.value;
+            const app = appsList.find(a => a.id == appId);
+
+            // Use app domain if selected, otherwise fallback to current host
+            let baseUrl = window.location.origin;
+            if (app && app.domain) {
+                // Strip protocol if domain already includes it
+                const cleanDomain = app.domain.replace(/^https?:\/\//, '');
+                baseUrl = `https://${cleanDomain}`;
+            } else if (!app) {
+                // Try to guess or warn
+            }
+
+            const url = `${baseUrl}/api/v1/track/click?fbclid={{fbclid}}&sub1=${campaign}&sub2=facebook&fb_id=${fbId}&fb_token=${fbToken}`;
+
+            document.getElementById('urlResult').innerHTML = `
+                <div class="success-message">
+                    ✅ Посилання згенеровано! <br>
+                    <small>App: ${app ? app.app_name : 'Default'}</small>
+                </div>
+                <div class="code-snippet">
+                    <code>${url}</code>
+                </div>
+                <div class="info-box" style="margin-top: 15px;">
+                    💡 Скопіюйте це посилання в Facebook Ads Manager як Destination URL
+                </div>
+            `;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function generateTestClick() {
+            const params = {
+                sub1: document.getElementById('click_sub1').value,
+                sub2: document.getElementById('click_sub2').value,
+                fbclid: document.getElementById('click_fbclid').value,
+                adsetid: document.getElementById('click_adsetid').value,
+            };
+            const url = `${API_BASE}/track/click?${new URLSearchParams(params).toString()}`;
+            try {
+                const response = await fetch(url, { redirect: 'manual' });
+                document.getElementById('clickResult').innerHTML = `
+                    <div class="success-message">✅ Клік створено! <a href="${url}" target="_blank">Link</a></div>
+                `;
+            } catch (e) {
+                document.getElementById('clickResult').innerHTML = `<div class="error-message">Error: ${e.message}</div>`;
+            }
+        }
+
+        async function simulateAttribution() {
+            const data = {
+                idfv: document.getElementById('attr_idfv').value,
+                device_model: document.getElementById('attr_device').value,
+                os_version: '16.0',
+                app_version: '1.0.0',
+                bundle: 'com.example.app'
+            };
+
+            const resultDiv = document.getElementById('attributionResult');
+            resultDiv.innerHTML = '<div style="color: var(--info);">⏳ Відправка...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/attribution`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                resultDiv.innerHTML = `<pre style="background:#f1f5f9;padding:12px;border-radius:8px;font-size:12px;overflow-x:auto;">${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (e) {
+                resultDiv.innerHTML = `<div style="color:var(--danger);">❌ Помилка: ${e.message}</div>`;
+            }
+        }
+
+        async function sendTestPostback() {
+            const clickId = document.getElementById('pb_click_id').value;
+            const status = document.getElementById('pb_status').value;
+            if (!clickId) {
+                document.getElementById('pb_result').innerHTML = '<span style="color:var(--danger);">Введіть Click ID</span>';
+                return;
+            }
+            const resultDiv = document.getElementById('pb_result');
+            resultDiv.innerHTML = '⏳ Відправка...';
+            try {
+                const response = await fetch(`${API_BASE}/postback?subid=${clickId}&status=${status}`);
+                const res = await response.json();
+                if (res.success) {
+                    resultDiv.innerHTML = `<pre style="background:#f0fdf4;padding:8px;border-radius:6px;font-size:11px;border:1px solid #bbf7d0;">✅ ${JSON.stringify(res, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<pre style="background:#fef2f2;padding:8px;border-radius:6px;font-size:11px;border:1px solid #fecaca;">❌ ${JSON.stringify(res, null, 2)}</pre>`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<span style="color:var(--danger);">❌ ${e.message}</span>`;
+            }
+        }
+
+        function updateUrlPreview() {
+            const select = document.getElementById('appSelector');
+            const app = appsList.find(a => a.id == select.value);
+            const sub1 = document.getElementById('gen_sub1').value;
+            const sub2 = document.getElementById('gen_sub2').value;
+            const sub3 = document.getElementById('gen_sub3').value;
+            const sub4 = document.getElementById('gen_sub4').value;
+            const sub5 = document.getElementById('gen_sub5').value;
+            const pixel = document.getElementById('gen_pixel').value;
+            const fbToken = document.getElementById('gen_fb_token').value;
+
+            // Strip protocol if domain already includes it
+            let domain = app ? app.domain.replace(/^https?:\/\//, '') : 'your-domain.com';
+
+            const params = new URLSearchParams();
+            if (sub1) params.set('sub1', sub1);
+            if (sub2) params.set('sub2', sub2);
+            if (sub3) params.set('sub3', sub3);
+            if (sub4) params.set('sub4', sub4);
+            if (sub5) params.set('sub5', sub5);
+            if (pixel) params.set('fb_id', pixel);
+            if (fbToken) params.set('fb_token', fbToken);
+
+            const queryString = params.toString();
+            const url = `https://${domain}/${queryString ? '?' + queryString : ''}`;
+            document.getElementById('urlPreview').textContent = url;
+        }
+
+        function copyGeneratedUrl() {
+            const url = document.getElementById('urlPreview').textContent;
+            if (url && url !== '-') {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('URL скопійовано!');
+                }).catch(() => {
+                    alert('Не вдалося скопіювати');
+                });
+            }
+        }
+
+        async function sendPostback() {
+            const subid = document.getElementById('postback_subid').value;
+            const status = document.getElementById('postback_status').value;
+            try {
+                const response = await fetch(`${API_BASE}/postback?subid=${subid}&status=${status}`);
+                const res = await response.json();
+                document.getElementById('postbackResult').innerHTML = `<pre>${JSON.stringify(res, null, 2)}</pre>`;
+            } catch (e) {
+                document.getElementById('postbackResult').innerHTML = e.message;
+            }
+        }
+
+        // Initialize (single call)
+        lucide.createIcons();
+
+        async function simulateAttribution() {
+            const idfv = document.getElementById('attr_idfv').value;
+            const device = document.getElementById('attr_device').value;
+            const osVersion = document.getElementById('attr_os').value || '17.0';
+            const resultDiv = document.getElementById('attributionResult');
+
+            if (!idfv) {
+                resultDiv.innerHTML = '<pre style="color: var(--danger);">⚠️ Введіть IDFV пристрою</pre>';
+                return;
+            }
+
+            // Get selected app's API key from the local selector
+            const select = document.getElementById('attr_app_select');
+            const appId = select ? select.value : null;
+            const app = appId ? appsList.find(a => a.id == appId) : null;
+            const apiKey = app ? app.api_key : null;
+
+            if (!apiKey) {
+                resultDiv.innerHTML = '<pre style="color: var(--danger);">⚠️ Оберіть додаток зі списку вище</pre>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<pre>⏳ Відправляю запит...</pre>';
+
+            try {
+                const response = await fetch(`${API_BASE}/attribution`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify({
+                        idfv: idfv,
+                        device_model: device,
+                        user_agent: navigator.userAgent,
+                        os_version: osVersion,
+                        app_version: '1.0'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `<pre style="background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">✅ Відповідь (${response.status}):\n${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<pre style="background: #fef2f2; padding: 12px; border-radius: 8px; border: 1px solid #fecaca;">❌ Помилка (${response.status}):\n${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<pre style="color: var(--danger);">❌ ${e.message}</pre>`;
+            }
+        }
+    </script>
+</body>
+
+</html>
