@@ -400,10 +400,15 @@ export class AdminController {
 
             try {
                 let axiosResponse;
+                const axiosConfig = {
+                    timeout: 10000,
+                    validateStatus: () => true // Do not throw on 4xx/5xx
+                };
+
                 if (log.method === 'POST') {
                     // For Facebook CAPI / Appsflyer S2S
                     const payload = typeof log.payload === 'string' ? JSON.parse(log.payload) : log.payload;
-                    axiosResponse = await axios.post(log.url, payload, { timeout: 10000 });
+                    axiosResponse = await axios.post(log.url, payload, axiosConfig);
                 } else {
                     // For Keitaro incoming simulation or standard GET
                     const urlParams = new URLSearchParams(log.payload).toString();
@@ -411,16 +416,25 @@ export class AdminController {
                         ? (urlParams ? `${log.url}&${urlParams}` : log.url)
                         : (urlParams ? `${log.url}?${urlParams}` : log.url);
 
-                    axiosResponse = await axios.get(fullUrl, { timeout: 10000 });
+                    axiosResponse = await axios.get(fullUrl, axiosConfig);
                 }
 
-                // If success, we update the existing log entry or let eventLogger create a new one. 
-                // Creating a new one and deleting the old one is cleaner.
-                await query('DELETE FROM postback_logs WHERE id = $1', [id]);
+                const isSuccess = axiosResponse.status >= 200 && axiosResponse.status < 300;
+
+                if (isSuccess) {
+                    // If success, we delete the old failed log
+                    await query('DELETE FROM postback_logs WHERE id = $1', [id]);
+                } else {
+                    // Update the log entry with the new error to reflect the latest attempt
+                    await query(
+                        'UPDATE postback_logs SET response_status = $1, response_body = $2, created_at = CURRENT_TIMESTAMP WHERE id = $3',
+                        [axiosResponse.status, JSON.stringify(axiosResponse.data), id]
+                    );
+                }
 
                 res.json({
-                    success: true,
-                    message: 'Postback re-sent successfully',
+                    success: isSuccess,
+                    message: isSuccess ? 'Postback re-sent successfully' : 'Postback rejected by destination',
                     response_status: axiosResponse.status,
                     response_body: axiosResponse.data
                 });

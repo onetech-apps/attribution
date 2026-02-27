@@ -287,7 +287,7 @@
             background: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
@@ -295,7 +295,35 @@
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
+            line-height: 1.5;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-sm svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .btn-icon-sm {
+            padding: 4px;
+            border-radius: 6px;
         }
 
         .btn:hover {
@@ -792,12 +820,12 @@
                 </div>
                 <div class="pagination" id="attributionsPagination"
                     style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
-                    <button class="btn btn-secondary" onclick="changeAttributionsPage(-1)" id="btnAttrPrev" disabled><i
-                            data-lucide="chevron-left" size="14"></i> Назад</button>
+                    <button class="btn btn-secondary btn-sm" onclick="changeAttributionsPage(-1)" id="btnAttrPrev"
+                        disabled><i data-lucide="chevron-left"></i> Назад</button>
                     <span style="align-self: center; font-size: 14px; font-weight: 500; color: var(--text-muted);"
                         id="attrPageInfo">Сторінка 1</span>
-                    <button class="btn btn-secondary" onclick="changeAttributionsPage(1)" id="btnAttrNext"><i
-                            data-lucide="chevron-right" size="14"></i> Далі</button>
+                    <button class="btn btn-secondary btn-sm" onclick="changeAttributionsPage(1)" id="btnAttrNext"><i
+                            data-lucide="chevron-right"></i> Далі</button>
                 </div>
             </div>
         </div>
@@ -813,19 +841,20 @@
             <div id="logs-postbacks" class="log-section active">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3>Логи Постбеків</h3>
-                    <button class="btn btn-danger" onclick="clearLogs('postbacks')"><i data-lucide="trash-2"
-                            size="14"></i> Очистити</button>
+                    <button class="btn btn-danger btn-sm" onclick="clearLogs('postbacks')"><i data-lucide="trash-2"></i>
+                        Очистити</button>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
-                            <th>Час</th>
-                            <th>Click ID</th>
-                            <th>Метод</th>
-                            <th>Статус</th>
-                            <th>Дані</th>
-                            <th>Відповідь</th>
-                            <th>Дії</th>
+                            <tr>
+                                <th>Час</th>
+                                <th>Click ID</th>
+                                <th>Метод</th>
+                                <th>Статус</th>
+                                <th>Дані</th>
+                                <th>Відповідь</th>
+                                <th>Дії</th>
                             </tr>
                         </thead>
                         <tbody id="postbackLogsBody">
@@ -957,14 +986,14 @@
                             <td><span class="badge badge-secondary">${log.method}</span></td>
                             <td><span class="badge ${log.response_status >= 200 && log.response_status < 300 ? 'badge-success' : 'badge-danger'}">${log.response_status}</span></td>
                             <td>
-                                <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px;" onclick='showJson(${JSON.stringify(JSON.parse(log.payload || "{}"))})'>Огляд</button>
+                                <button class="btn btn-secondary btn-sm" data-json="${encodeURIComponent(log.payload || '{}')}" onclick="showJson(this.dataset.json)">Огляд</button>
                             </td>
                             <td>
-                                <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px;" onclick='showJson(${JSON.stringify(JSON.parse(log.response_body || "{}"))})'>Огляд</button>
+                                <button class="btn btn-secondary btn-sm" data-json="${encodeURIComponent(log.response_body || '{}')}" onclick="showJson(this.dataset.json)">Огляд</button>
                             </td>
                             <td>
                                 ${log.response_status < 200 || log.response_status >= 300
-                            ? `<button class="btn btn-primary" style="padding: 2px 6px; font-size: 10px;" onclick="resendLog(${log.id})"><i data-lucide="refresh-cw" size="10"></i> Перевідправити</button>`
+                            ? `<button class="btn btn-primary btn-sm" onclick="resendLog(${log.id})"><i data-lucide="refresh-cw"></i> Перевідправити</button>`
                             : ''}
                             </td>
                         </tr>
@@ -976,7 +1005,7 @@
                             <td><span class="badge badge-danger">${log.type}</span></td>
                             <td>${log.message}</td>
                             <td>
-                                <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px;" onclick='showJson(${JSON.stringify({ stack: log.stack, meta: JSON.parse(log.metadata || "{}") })})'>Деталі</button>
+                                <button class="btn btn-secondary btn-sm" data-json="${encodeURIComponent(JSON.stringify({ stack: log.stack, meta: JSON.parse(log.metadata || "{}") }))}" onclick="showJson(this.dataset.json)">Деталі</button>
                             </td>
                         </tr>
                     `).join('');
@@ -996,10 +1025,11 @@
                 });
                 const result = await response.json();
 
-                if (response.ok) {
+                if (response.ok && result.success) {
                     alert('✅ Постбек успішно доставлено!');
                 } else {
-                    alert(`❌ Помилка відправки: ${result.details?.message || result.error || 'Невідома помилка'}`);
+                    const errorMsg = result.response_body?.error?.message || result.details?.message || result.error || 'Невідома помилка';
+                    alert(`❌ Помилка відправки (Статус ${result.response_status || response.status}):\n${errorMsg}`);
                 }
 
                 // Refresh logs table
@@ -1022,7 +1052,14 @@
         }
 
         function showJson(data) {
-            document.getElementById('jsonModalContent').textContent = JSON.stringify(data, null, 2);
+            let parsedData = data;
+            try {
+                if (typeof data === 'string') {
+                    parsedData = JSON.parse(decodeURIComponent(data));
+                }
+            } catch (e) { }
+
+            document.getElementById('jsonModalContent').textContent = JSON.stringify(parsedData, null, 2);
             document.getElementById('jsonModal').classList.add('active');
         }
 

@@ -129,7 +129,7 @@
             background: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
@@ -137,7 +137,35 @@
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
+            line-height: 1.5;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-sm svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .btn-icon-sm {
+            padding: 4px;
+            border-radius: 6px;
         }
 
         .btn:hover {
@@ -346,8 +374,8 @@
         <div class="section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2>Додатки</h2>
-                <button class="btn btn-success" onclick="openAddModal()"><i data-lucide="plus-circle" size="18"></i>
-                    Додати додаток</button>
+                <button class="btn btn-success" onclick="openAddModal()"><i data-lucide="plus-circle"></i> Додати
+                    додаток</button>
             </div>
 
             <div id="message"></div>
@@ -409,8 +437,8 @@
                     <label>API Key (Тільки для читання)</label>
                     <div style="display: flex; gap: 10px;">
                         <input type="text" id="api_key_readonly" readonly style="background: #f0f0f0; color: #555;">
-                        <button type="button" class="btn btn-secondary" onclick="copyApiKeyFromModal()"
-                            style="padding: 0 15px;"><i data-lucide="copy" size="16"></i></button>
+                        <button type="button" class="btn btn-secondary btn-icon" onclick="copyApiKeyFromModal()"><i
+                                data-lucide="copy"></i></button>
                     </div>
                     <small style="color: #666; font-size: 12px;">Використовуйте цей ключ для налаштування SDK</small>
                 </div>

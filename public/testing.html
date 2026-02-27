@@ -129,7 +129,7 @@
             background: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
@@ -137,7 +137,35 @@
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
+            line-height: 1.5;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-sm svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .btn-icon-sm {
+            padding: 4px;
+            border-radius: 6px;
         }
 
         .btn:hover {
@@ -407,21 +435,21 @@
             <p class="subtitle">Інструменти для верифікації трекінгу та дебаггінгу</p>
             <div class="nav-tabs">
                 <button class="nav-tab" onclick="window.location.href='dashboard.html'"><i
-                        data-lucide="layout-dashboard" size="18"></i> Дашборд</button>
+                        data-lucide="layout-dashboard"></i> Дашборд</button>
                 <button class="nav-tab" onclick="window.location.href='dashboard.html?tab=logs'"><i
-                        data-lucide="file-text" size="18"></i>
+                        data-lucide="file-text"></i>
                     Логи</button>
-                <button class="nav-tab active"><i data-lucide="flask-conical" size="18"></i> Тестування</button>
-                <button class="nav-tab" onclick="window.location.href='apps.html'"><i data-lucide="smartphone"
-                        size="18"></i> Додатки</button>
+                <button class="nav-tab active"><i data-lucide="flask-conical"></i> Тестування</button>
+                <button class="nav-tab" onclick="window.location.href='apps.html'"><i data-lucide="smartphone"></i>
+                    Додатки</button>
             </div>
         </div>
 
         <div class="section">
             <div class="tool-tabs">
-                <button class="tool-tab active" onclick="switchTab('verification')"><i data-lucide="shield-check"
-                        size="16"></i> Перевірка посилання</button>
-                <button class="tool-tab" onclick="switchTab('manual')"><i data-lucide="wrench" size="16"></i> Ручні
+                <button class="tool-tab active" onclick="switchTab('verification')"><i data-lucide="shield-check"></i>
+                    Перевірка посилання</button>
+                <button class="tool-tab" onclick="switchTab('manual')"><i data-lucide="wrench"></i> Ручні
                     інструменти</button>
             </div>
 
@@ -437,8 +465,8 @@
                         <div style="display: flex; gap: 10px;">
                             <input type="text" id="verifyUrl" placeholder="https://oneapps.info?sub1=..."
                                 value="https://oneapps.info/?sub1=test_campaign">
-                            <button class="btn" onclick="verifyLink()" id="verifyBtn"><i data-lucide="play"
-                                    size="16"></i> Запустити тест</button>
+                            <button class="btn" onclick="verifyLink()" id="verifyBtn"><i data-lucide="play"></i>
+                                Запустити тест</button>
                         </div>
                     </div>
                 </div>
@@ -501,7 +529,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <!-- URL Generator -->
                     <div style="border: 1px solid var(--border); padding: 20px; border-radius: 12px;">
-                        <h3><i data-lucide="link" size="18"></i> Генератор URL</h3>
+                        <h3><i data-lucide="link"></i> Генератор URL</h3>
                         <p style="color: var(--secondary); font-size: 13px; margin: 8px 0 16px;">📝 Створює
                             трекінг-посилання для реклами. Юзер клікає на це посилання → переходить в App Store →
                             встановлює додаток. Сервер запам'ятовує клік для атрибуції.</p>
@@ -543,14 +571,13 @@
                             id="urlPreview">
                             -
                         </div>
-                        <button class="btn btn-secondary" onclick="copyGeneratedUrl()"><i data-lucide="copy"
-                                size="14"></i>
+                        <button class="btn btn-secondary" onclick="copyGeneratedUrl()"><i data-lucide="copy"></i>
                             Копіювати URL</button>
                     </div>
 
                     <!-- Postback Sender -->
                     <div style="border: 1px solid var(--border); padding: 20px; border-radius: 12px;">
-                        <h3><i data-lucide="send" size="18"></i> Тест постбеку</h3>
+                        <h3><i data-lucide="send"></i> Тест постбеку</h3>
                         <p style="color: var(--secondary); font-size: 13px; margin: 8px 0 16px;">📤 Імітує повідомлення
                             від CPA-мережі: "Цей клік конвертувався!" Якщо у кліка є FB Pixel — відправить подію
                             конверсії у Facebook для оптимізації реклами.</p>
@@ -566,7 +593,7 @@
                                 <option value="reject">reject — відхилено</option>
                             </select>
                         </div>
-                        <button class="btn" onclick="sendTestPostback()"><i data-lucide="send" size="14"></i> Надіслати
+                        <button class="btn" onclick="sendTestPostback()"><i data-lucide="send"></i> Надіслати
                             Postback</button>
                         <div id="pb_result" style="margin-top: 10px; font-size: 12px;"></div>
                     </div>
